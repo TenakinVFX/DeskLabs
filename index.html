@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #0a0a0f 0%, #111827 50%, #1f2937 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #1a1a1a 100%);
             color: #e2e8f0;
             overflow-x: hidden;
         }
@@ -135,7 +135,7 @@
 
         /* Products Section */
         .products {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
             padding: 100px 0;
         }
 
@@ -159,7 +159,6 @@
         }
 
         .product-card {
-            background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
@@ -169,6 +168,26 @@
             position: relative;
             overflow: hidden;
             cursor: pointer;
+        }
+
+        .product-card.desktube {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .product-card.structura {
+            background: rgba(30, 64, 175, 0.15);
+            border-color: rgba(30, 64, 175, 0.3);
+        }
+
+        .product-card.icora {
+            background: rgba(5, 150, 105, 0.15);
+            border-color: rgba(5, 150, 105, 0.3);
+        }
+
+        .product-card.desknest {
+            background: rgba(14, 165, 233, 0.15);
+            border-color: rgba(14, 165, 233, 0.3);
         }
 
         .product-card::before {
@@ -204,7 +223,26 @@
         .product-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .product-card.desktube:hover {
+            border-color: rgba(239, 68, 68, 0.5);
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .product-card.structura:hover {
+            border-color: rgba(30, 64, 175, 0.5);
+            background: rgba(30, 64, 175, 0.2);
+        }
+
+        .product-card.icora:hover {
+            border-color: rgba(5, 150, 105, 0.5);
+            background: rgba(5, 150, 105, 0.2);
+        }
+
+        .product-card.desknest:hover {
+            border-color: rgba(14, 165, 233, 0.5);
+            background: rgba(14, 165, 233, 0.2);
         }
 
         .product-icon {
@@ -269,19 +307,41 @@
         }
 
         .download-stats {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1));
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            border: 1px solid;
             padding: 15px 20px;
             border-radius: 12px;
             margin-top: 20px;
             text-align: center;
             font-weight: 600;
+        }
+
+        .product-card.desktube .download-stats {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .product-card.structura .download-stats {
+            background: rgba(30, 64, 175, 0.1);
+            border-color: rgba(30, 64, 175, 0.3);
             color: #60a5fa;
+        }
+
+        .product-card.icora .download-stats {
+            background: rgba(5, 150, 105, 0.1);
+            border-color: rgba(5, 150, 105, 0.3);
+            color: #34d399;
+        }
+
+        .product-card.desknest .download-stats {
+            background: rgba(14, 165, 233, 0.1);
+            border-color: rgba(14, 165, 233, 0.3);
+            color: #38bdf8;
         }
 
         /* Footer */
         footer {
-            background: linear-gradient(135deg, #0f172a, #111827);
+            background: linear-gradient(135deg, #0a0a0a, #111111);
             border-top: 1px solid rgba(59, 130, 246, 0.2);
             color: #e2e8f0;
             padding: 60px 0 30px;
