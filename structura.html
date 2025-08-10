@@ -472,39 +472,116 @@
         </div>
     </section>
 
-    <!-- Demo Section -->
+    <!-- Live Demo Section -->
     <section class="demo">
+        <div class="particles" id="particles"></div>
+        
         <div class="container">
-            <h2 class="section-title fade-in-up">How It Works</h2>
-            
-            <div class="demo-container fade-in-up">
-                <div class="demo-title">🖊️ Write Your Structure</div>
-                <div class="code-example">
-<span class="code-comment">// Type your folder structure using simple indentation</span>
-<span class="code-folder">Project Root/</span>
-    <span class="code-folder">src/</span>
-        <span class="code-folder">components/</span>
-            <span class="code-file">Header.jsx</span>
-            <span class="code-file">Footer.jsx</span>
-        <span class="code-folder">pages/</span>
-            <span class="code-file">Home.jsx</span>
-            <span class="code-file">About.jsx</span>
-        <span class="code-folder">assets/</span>
-            <span class="code-folder">images/</span>
-            <span class="code-folder">icons/</span>
-    <span class="code-folder">public/</span>
-        <span class="code-file">index.html</span>
-        <span class="code-file">favicon.ico</span>
-    <span class="code-folder">docs/</span>
-        <span class="code-file">README.md</span>
-        <span class="code-file">CHANGELOG.md</span>
+            <h2 class="section-title fade-in-up">Live Demo</h2>
+            <p style="text-align: center; font-size: 1.2rem; color: #cbd5e1; margin-bottom: 40px;">
+                Watch how simple text becomes organized folder structures in real-time
+            </p>
+
+            <div class="demo-container">
+                <div class="demo-title">
+                    🖊️ Write Your Structure → ⚡ Generate Instantly
                 </div>
                 
-                <div class="demo-title">⚡ Generate Instantly</div>
-                <p style="text-align: center; color: #cbd5e1; margin-bottom: 20px;">
-                    Click "Generate" and watch your folder structure come to life in seconds!
-                </p>
+                <div class="demo-grid">
+                    <div class="input-section">
+                        <div class="input-title">
+                            ⚡ Type Your Structure
+                        </div>
+                        <div class="typewriter-container" id="typewriter">
+                            <span class="cursor" id="cursor"></span>
+                        </div>
+                    </div>
+
+                    <div class="output-section">
+                        <div class="output-title">
+                            🚀 Generated Folders
+                        </div>
+                        <div class="folder-structure" id="folderOutput">
+                            <div style="color: #64748b; text-align: center; padding: 40px 0;">
+                                Waiting for your input...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="examples-section">
+                    <h3 class="examples-title">Try These Templates</h3>
+                    <div class="examples-grid">
+                        <div class="example-card" onclick="runExample('music')">
+                            <div class="example-title">🎵 Music Project</div>
+                            <div class="example-code">
+<span style="color: #f87171;">[Beat Making Session]</span>
+01. Source Audio
+02. Project Files
+03. Exports
+04. Stems
+                            </div>
+                        </div>
+
+                        <div class="example-card" onclick="runExample('design')">
+                            <div class="example-title">🎨 Design Project</div>
+                            <div class="example-code">
+<span style="color: #f87171;">[Brand Identity]</span>
+01. Concepts
+02. Assets
+03. Final Files
+04. Client Delivery
+                            </div>
+                        </div>
+
+                        <div class="example-card" onclick="runExample('youtube')">
+                            <div class="example-title">📺 YouTube Channel</div>
+                            <div class="example-code">
+<span style="color: #f87171;">[New Video]</span>
+01. Raw Footage
+02. Audio Files
+03. Thumbnails
+04. Final Edit
+                            </div>
+                        </div>
+
+                        <div class="example-card" onclick="runExample('code')">
+                            <div class="example-title">💻 Code Project</div>
+                            <div class="example-code">
+<span style="color: #f87171;">[Web App]</span>
+01. Source Code
+02. Assets
+03. Documentation
+04. Build Files
+                            </div>
+                        </div>
+
+                        <div class="example-card" onclick="runExample('photo')">
+                            <div class="example-title">📸 Photo Shoot</div>
+                            <div class="example-code">
+<span style="color: #f87171;">[Wedding Photos]</span>
+01. RAW Files
+02. Edited
+03. Finals
+04. Client Gallery
+                            </div>
+                        </div>
+
+                        <div class="example-card" onclick="runExample('course')">
+                            <div class="example-title">📚 Online Course</div>
+                            <div class="example-code">
+<span style="color: #f87171;">[JavaScript Mastery]</span>
+01. Video Lessons
+02. Resources
+03. Assignments
+04. Student Work
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <button class="restart-btn pulse" onclick="restartDemo()">▶️ Restart Demo</button>
         </div>
     </section>
 
