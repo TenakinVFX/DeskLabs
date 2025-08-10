@@ -217,6 +217,7 @@
         .demo {
             padding: 100px 0;
             background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            position: relative;
         }
 
         .demo-container {
@@ -226,7 +227,7 @@
             border-radius: 20px;
             padding: 40px;
             margin-top: 60px;
-            max-width: 800px;
+            max-width: 1000px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -234,12 +235,34 @@
         .demo-title {
             font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             color: #f8fafc;
             text-align: center;
         }
 
-        .code-example {
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .input-section, .output-section {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(30, 64, 175, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .input-title, .output-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .typewriter-container {
             background: #0f172a;
             border: 1px solid rgba(30, 64, 175, 0.3);
             border-radius: 10px;
@@ -247,20 +270,126 @@
             font-family: 'Courier New', monospace;
             color: #e2e8f0;
             line-height: 1.6;
+            min-height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 20px;
+            background: #60a5fa;
+            animation: blink 1s infinite;
+            position: relative;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .folder-structure {
+            background: #0f172a;
+            border: 1px solid rgba(30, 64, 175, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            color: #e2e8f0;
+            line-height: 1.6;
+            min-height: 200px;
+        }
+
+        .folder-item {
+            margin: 2px 0;
+            opacity: 0;
+            transform: translateX(-10px);
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .examples-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(30, 64, 175, 0.2);
+        }
+
+        .examples-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #f8fafc;
+            text-align: center;
             margin-bottom: 20px;
-            overflow-x: auto;
         }
 
-        .code-comment {
-            color: #94a3b8;
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
         }
 
-        .code-folder {
+        .example-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(30, 64, 175, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .example-card:hover {
+            border-color: rgba(30, 64, 175, 0.5);
+            background: rgba(15, 23, 42, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .example-title {
+            font-size: 0.9rem;
+            font-weight: 600;
             color: #60a5fa;
+            margin-bottom: 8px;
         }
 
-        .code-file {
-            color: #10b981;
+        .example-code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+
+        .restart-btn {
+            display: block;
+            margin: 30px auto 0;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(30, 64, 175, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0); }
         }
 
         /* Use Cases */
@@ -392,9 +521,13 @@
                 padding: 20px;
             }
 
-            .code-example {
-                font-size: 0.9rem;
-                padding: 15px;
+            .demo-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .examples-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -474,8 +607,6 @@
 
     <!-- Live Demo Section -->
     <section class="demo">
-        <div class="particles" id="particles"></div>
-        
         <div class="container">
             <h2 class="section-title fade-in-up">Live Demo</h2>
             <p style="text-align: center; font-size: 1.2rem; color: #cbd5e1; margin-bottom: 40px;">
@@ -653,6 +784,276 @@
     </footer>
 
     <script>
+        // Demo examples
+        const examples = {
+            music: {
+                input: `[Beat Making Session]
+01. Source Audio
+    └── Vocals
+    └── Instruments
+    └── Samples
+02. Project Files
+    └── FL Studio Files
+    └── MIDI Files
+03. Exports
+    └── WAV Files
+    └── MP3 Files
+04. Stems
+    └── Individual Tracks`,
+                output: `📁 Beat Making Session/
+├── 📁 01. Source Audio/
+│   ├── 📁 Vocals/
+│   ├── 📁 Instruments/
+│   └── 📁 Samples/
+├── 📁 02. Project Files/
+│   ├── 📁 FL Studio Files/
+│   └── 📁 MIDI Files/
+├── 📁 03. Exports/
+│   ├── 📁 WAV Files/
+│   └── 📁 MP3 Files/
+└── 📁 04. Stems/
+    └── 📁 Individual Tracks/`
+            },
+            design: {
+                input: `[Brand Identity]
+01. Concepts
+    └── Sketches
+    └── Mood Boards
+02. Assets
+    └── Logo Files
+    └── Color Palettes
+03. Final Files
+    └── Vector Files
+    └── Raster Files
+04. Client Delivery
+    └── Brand Guidelines
+    └── Final Assets`,
+                output: `📁 Brand Identity/
+├── 📁 01. Concepts/
+│   ├── 📁 Sketches/
+│   └── 📁 Mood Boards/
+├── 📁 02. Assets/
+│   ├── 📁 Logo Files/
+│   └── 📁 Color Palettes/
+├── 📁 03. Final Files/
+│   ├── 📁 Vector Files/
+│   └── 📁 Raster Files/
+└── 📁 04. Client Delivery/
+    ├── 📁 Brand Guidelines/
+    └── 📁 Final Assets/`
+            },
+            youtube: {
+                input: `[New Video]
+01. Raw Footage
+    └── A-Roll
+    └── B-Roll
+02. Audio Files
+    └── Voice Over
+    └── Music
+    └── Sound Effects
+03. Thumbnails
+    └── Concepts
+    └── Final
+04. Final Edit
+    └── Project Files
+    └── Exports`,
+                output: `📁 New Video/
+├── 📁 01. Raw Footage/
+│   ├── 📁 A-Roll/
+│   └── 📁 B-Roll/
+├── 📁 02. Audio Files/
+│   ├── 📁 Voice Over/
+│   ├── 📁 Music/
+│   └── 📁 Sound Effects/
+├── 📁 03. Thumbnails/
+│   ├── 📁 Concepts/
+│   └── 📁 Final/
+└── 📁 04. Final Edit/
+    ├── 📁 Project Files/
+    └── 📁 Exports/`
+            },
+            code: {
+                input: `[Web App]
+01. Source Code
+    └── Components
+    └── Pages
+    └── Utils
+02. Assets
+    └── Images
+    └── Icons
+    └── Fonts
+03. Documentation
+    └── API Docs
+    └── User Guide
+04. Build Files
+    └── Production
+    └── Development`,
+                output: `📁 Web App/
+├── 📁 01. Source Code/
+│   ├── 📁 Components/
+│   ├── 📁 Pages/
+│   └── 📁 Utils/
+├── 📁 02. Assets/
+│   ├── 📁 Images/
+│   ├── 📁 Icons/
+│   └── 📁 Fonts/
+├── 📁 03. Documentation/
+│   ├── 📁 API Docs/
+│   └── 📁 User Guide/
+└── 📁 04. Build Files/
+    ├── 📁 Production/
+    └── 📁 Development/`
+            },
+            photo: {
+                input: `[Wedding Photos]
+01. RAW Files
+    └── Ceremony
+    └── Reception
+    └── Portraits
+02. Edited
+    └── Color Corrected
+    └── Retouched
+03. Finals
+    └── High Resolution
+    └── Web Resolution
+04. Client Gallery
+    └── Selected Photos
+    └── Print Ready`,
+                output: `📁 Wedding Photos/
+├── 📁 01. RAW Files/
+│   ├── 📁 Ceremony/
+│   ├── 📁 Reception/
+│   └── 📁 Portraits/
+├── 📁 02. Edited/
+│   ├── 📁 Color Corrected/
+│   └── 📁 Retouched/
+├── 📁 03. Finals/
+│   ├── 📁 High Resolution/
+│   └── 📁 Web Resolution/
+└── 📁 04. Client Gallery/
+    ├── 📁 Selected Photos/
+    └── 📁 Print Ready/`
+            },
+            course: {
+                input: `[JavaScript Mastery]
+01. Video Lessons
+    └── Beginner
+    └── Intermediate
+    └── Advanced
+02. Resources
+    └── Code Examples
+    └── Cheat Sheets
+03. Assignments
+    └── Practice Problems
+    └── Projects
+04. Student Work
+    └── Submissions
+    └── Feedback`,
+                output: `📁 JavaScript Mastery/
+├── 📁 01. Video Lessons/
+│   ├── 📁 Beginner/
+│   ├── 📁 Intermediate/
+│   └── 📁 Advanced/
+├── 📁 02. Resources/
+│   ├── 📁 Code Examples/
+│   └── 📁 Cheat Sheets/
+├── 📁 03. Assignments/
+│   ├── 📁 Practice Problems/
+│   └── 📁 Projects/
+└── 📁 04. Student Work/
+    ├── 📁 Submissions/
+    └── 📁 Feedback/`
+            }
+        };
+
+        let currentDemo = null;
+        let typewriterTimeout = null;
+        let isTyping = false;
+
+        // Typewriter effect
+        function typeText(element, text, callback) {
+            if (typewriterTimeout) clearTimeout(typewriterTimeout);
+            
+            element.innerHTML = '<span class="cursor" id="cursor"></span>';
+            let i = 0;
+            isTyping = true;
+
+            function type() {
+                if (i < text.length) {
+                    const cursor = element.querySelector('.cursor');
+                    cursor.insertAdjacentText('beforebegin', text.charAt(i));
+                    i++;
+                    typewriterTimeout = setTimeout(type, 50);
+                } else {
+                    isTyping = false;
+                    if (callback) callback();
+                }
+            }
+
+            typewriterTimeout = setTimeout(type, 300);
+        }
+
+        // Generate folder structure with animation
+        function generateFolders(text) {
+            const outputElement = document.getElementById('folderOutput');
+            const lines = text.split('\n');
+            
+            outputElement.innerHTML = '';
+            
+            lines.forEach((line, index) => {
+                if (line.trim()) {
+                    const folderDiv = document.createElement('div');
+                    folderDiv.className = 'folder-item';
+                    folderDiv.innerHTML = line;
+                    folderDiv.style.animationDelay = `${index * 100}ms`;
+                    outputElement.appendChild(folderDiv);
+                }
+            });
+        }
+
+        // Run example demo
+        function runExample(exampleKey) {
+            if (isTyping) return;
+            
+            const example = examples[exampleKey];
+            if (!example) return;
+
+            currentDemo = exampleKey;
+            
+            const typewriterContainer = document.getElementById('typewriter');
+            
+            typeText(typewriterContainer, example.input, () => {
+                setTimeout(() => {
+                    generateFolders(example.output);
+                }, 500);
+            });
+        }
+
+        // Restart demo
+        function restartDemo() {
+            if (typewriterTimeout) clearTimeout(typewriterTimeout);
+            isTyping = false;
+            
+            const typewriterContainer = document.getElementById('typewriter');
+            const folderOutput = document.getElementById('folderOutput');
+            
+            typewriterContainer.innerHTML = '<span class="cursor" id="cursor"></span>';
+            folderOutput.innerHTML = '<div style="color: #64748b; text-align: center; padding: 40px 0;">Waiting for your input...</div>';
+            
+            // Auto-start with music example after restart
+            setTimeout(() => {
+                runExample('music');
+            }, 1000);
+        }
+
+        // Auto-start demo when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Start demo after a short delay
+            setTimeout(() => {
+                runExample('music');
+            }, 2000);
+        });
+
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -697,37 +1098,6 @@
         document.querySelectorAll('.fade-in-up').forEach(el => {
             observer.observe(el);
         });
-
-        // Add typewriter effect to code example
-        const codeExample = document.querySelector('.code-example');
-        const originalText = codeExample.innerHTML;
-        
-        function typeWriter() {
-            codeExample.innerHTML = '';
-            let i = 0;
-            
-            function type() {
-                if (i < originalText.length) {
-                    codeExample.innerHTML += originalText.charAt(i);
-                    i++;
-                    setTimeout(type, 20);
-                }
-            }
-            
-            setTimeout(type, 500);
-        }
-
-        // Trigger typewriter when demo section comes into view
-        const demoObserver = new IntersectionObserver(function(entries) {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    typeWriter();
-                    demoObserver.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.5 });
-
-        demoObserver.observe(document.querySelector('.demo-container'));
     </script>
 </body>
 </html>
