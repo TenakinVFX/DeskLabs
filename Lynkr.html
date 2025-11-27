@@ -535,7 +535,7 @@
             // Mark as backed up
             localStorage.setItem('lynkr-last-backup', Date.now().toString());
             
-            // Export all tabs
+            // Export all tabs automatically
             exportAllTabs();
         }
 
@@ -553,22 +553,9 @@
                 return;
             }
             
-            if (appState.tabs.length === 1) {
-                // Just export the single tab
-                exportCurrentTab();
-                alert('✅ Backup complete! Your bookmarks are safe.');
-                return;
-            }
-            
-            // If multiple tabs, let user choose
-            const choice = confirm(`You have ${appState.tabs.length} tabs.\n\nOK = Export current tab only\nCancel = Export all tabs separately`);
-            
-            if (choice) {
-                exportCurrentTab();
-                alert('✅ Backup complete! Current tab exported.');
-            } else {
-                // Export each tab
-                appState.tabs.forEach(tab => {
+            // Export each tab as a separate .lynk file
+            appState.tabs.forEach((tab, index) => {
+                setTimeout(() => {
                     const data = {
                         Name: tab.name,
                         TabColor: tab.tabColor,
@@ -605,10 +592,12 @@
                     a.download = `${tab.name}.lynk`;
                     a.click();
                     URL.revokeObjectURL(url);
-                });
-                
-                alert(`✅ Backup complete! Exported all ${appState.tabs.length} tabs.`);
-            }
+                }, index * 300); // Stagger downloads by 300ms to avoid browser blocking
+            });
+            
+            setTimeout(() => {
+                alert(`✅ Backup complete! Exported all ${appState.tabs.length} tab(s).\n\nYour .lynk files are downloading now.`);
+            }, appState.tabs.length * 300 + 100);
         }
 
         // Storage
