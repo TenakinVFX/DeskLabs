@@ -905,64 +905,56 @@
         }
 
         function showGroupSelectionDialog(url) {
-    const groups = Object.keys(appState.currentTab.groups);
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="modal">
-            <h3 class="modal-title">Add Bookmark</h3>
-            <p style="color: #999; font-size: 13px; margin-bottom: 16px;">Select or create a group:</p>
-            ${groups.length > 0 ? `
-                <select id="groupSelect" class="modal-input" style="cursor: pointer;">
-                    ${groups.map(g => `<option value="${g}">${g}</option>`).join('')}
-                    <option value="__new__">+ Create New Group</option>
-                </select>
-                <input 
-                    type="text" 
-                    id="newGroupName" 
-                    class="modal-input hidden" 
-                    placeholder="New group name..."
-                >
-            ` : `
-                <input 
-                    type="text" 
-                    id="newGroupName" 
-                    class="modal-input" 
-                    placeholder="Enter group name..."
-                >
-            `}
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="closeGroupDialog()">Cancel</button>
-                <button class="btn btn-primary" onclick="confirmAddBookmark('${url.replace(/'/g, "\\'")}')">Add</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    
-    const select = document.getElementById('groupSelect');
-    const newGroupInput = document.getElementById('newGroupName');
-    
-    if (select) {
-        select.addEventListener('change', () => {
-            if (select.value === '__new__') {
-                newGroupInput.classList.remove('hidden');
+            const groups = Object.keys(appState.currentTab.groups);
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal">
+                    <h3 class="modal-title">Add Bookmark</h3>
+                    <p style="color: #999; font-size: 13px; margin-bottom: 16px;">Select or create a group:</p>
+                    <select id="groupSelect" class="modal-input" style="cursor: pointer;">
+                        ${groups.length > 0 ? groups.map(g => `<option value="${g}">${g}</option>`).join('') : ''}
+                        <option value="__new__">+ Create New Group</option>
+                    </select>
+                    <input 
+                        type="text" 
+                        id="newGroupName" 
+                        class="modal-input ${groups.length === 0 ? '' : 'hidden'}" 
+                        placeholder="New group name..."
+                    >
+                    <div class="modal-buttons">
+                        <button class="btn btn-secondary" onclick="closeGroupDialog()">Cancel</button>
+                        <button class="btn btn-primary" onclick="confirmAddBookmark('${url.replace(/'/g, "\\'")}')">Add</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            const select = document.getElementById('groupSelect');
+            const newGroupInput = document.getElementById('newGroupName');
+            
+            select.addEventListener('change', () => {
+                if (select.value === '__new__') {
+                    newGroupInput.classList.remove('hidden');
+                    newGroupInput.focus();
+                } else {
+                    newGroupInput.classList.add('hidden');
+                }
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeGroupDialog();
+                }
+            });
+            
+            if (groups.length === 0) {
                 newGroupInput.focus();
             } else {
-                newGroupInput.classList.add('hidden');
+                select.focus();
             }
-        });
-        select.focus();
-    } else {
-        newGroupInput.focus();
-    }
-    
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeGroupDialog();
         }
-    });
-}
 
 async function confirmAddBookmark(url) {
     const select = document.getElementById('groupSelect');
