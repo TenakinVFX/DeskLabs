@@ -809,12 +809,95 @@
                 url = 'https://' + url;
             }
 
-            const title = getPageTitle(url);
-            const thumbnailUrl = getFaviconUrl(url);
+            // Show group selection dialog
+            showGroupSelectionDialog(url);
+        }
+
+        function showGroupSelectionDialog(url) {
+            const groups = Object.keys(appState.currentTab.groups);
             
-            const groupName = Object.keys(appState.currentTab.groups)[0] || 'Bookmarks';
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal">
+                    <h3 class="modal-title">Add Bookmark</h3>
+                    <p style="color: #999; font-size: 13px; margin-bottom: 16px;">Select or create a group:</p>
+                    <select id="groupSelect" class="modal-input" style="cursor: pointer;">
+                        ${groups.length > 0 ? groups.map(g => `<option value="${g}">${g}</option>`).join('') : ''}
+                        <option value="__new__">+ Create New Group</option>
+                    </select>
+                    <input 
+                        type="text" 
+                        id="newGroupName" 
+                        class="modal-input hidden" 
+                        placeholder="New group name..."
+                    >
+                    <div class="modal-buttons">
+                        <button class="btn btn-secondary" onclick="closeGroupDialog()">Cancel</button>
+                        <button class="btn btn-primary" onclick="confirmAddBookmark('${url.replace(/'/g, "\\'")}')">Add</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
             
-            if (!appState.currentTab.groups[groupName]) {
+            // Handle group selection change
+            const select = document.getElementById('groupSelect');
+            const newGroupInput = document.getElementById('newGroupName');
+            
+            select.addEventListener('change', () => {
+                if (select.value === '__new__') {
+                    newGroupInput.classList.remove('hidden');
+                    newGroupInput.focus();
+                } else {
+                    newGroupInput.classList.add('hidden');
+                }
+            });
+            
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeGroupDialog();
+                }
+            });
+            
+            // Focus select
+            select.focus();
+        }
+
+        function closeGroupDialog() {
+            const modal = document.querySelector('.modal-overlay');
+            if (modal) modal.remove();
+        }
+
+        async function confirmAddBookmark(url) {
+            const select = document.getElementById('groupSelect');
+            const newGroupInput = document.getElementById('newGroupName');
+            
+            let groupName;
+            
+            if (select.value === '__new__') {
+                groupName = newGroupInput.value.trim();
+                if (!groupName) {
+                    alert('Please enter a group name');
+                    return;
+                }
+                // Create the new group if it doesn't exist
+                if (!appState.currentTab.groups[groupName]) {
+                    appState.currentTab.groups[groupName] = {
+                        bookmarks: [],
+                        isCollapsed: false,
+                        order: Object.keys(appState.currentTab.groups).length,
+                        headerColor: '#2A2A2A',
+                        backgroundColor: '#1A1A1A'
+                    };
+                }
+            } else {
+                groupName = select.value;
+            }
+            
+            // If no groups exist and user didn't create one, create default
+            if (!groupName && Object.keys(appState.currentTab.groups).length === 0) {
+                groupName = 'Bookmarks';
                 appState.currentTab.groups[groupName] = {
                     bookmarks: [],
                     isCollapsed: false,
@@ -823,6 +906,9 @@
                     backgroundColor: '#1A1A1A'
                 };
             }
+
+            const title = getPageTitle(url);
+            const thumbnailUrl = getFaviconUrl(url);
             
             appState.currentTab.groups[groupName].bookmarks.push({
                 title,
@@ -832,7 +918,14 @@
                 backgroundColor: '#252525'
             });
             
-            input.value = '';
+            // Update tabs array to persist changes
+            const tabIndex = appState.tabs.findIndex(t => t.name === appState.currentTab.name);
+            if (tabIndex !== -1) {
+                appState.tabs[tabIndex] = appState.currentTab;
+            }
+            
+            document.getElementById('urlInput').value = '';
+            closeGroupDialog();
             saveToStorage();
             renderBookmarks();
         }
