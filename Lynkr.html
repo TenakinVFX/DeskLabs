@@ -50,6 +50,11 @@
             font-size: 18px;
         }
 
+        .header-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
         .header-buttons button {
             background: transparent;
             border: none;
@@ -64,10 +69,37 @@
             background: #404040;
         }
 
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 20px;
+        }
+
+        .mobile-menu-btn:hover {
+            background: #404040;
+        }
+
         .main-content {
             display: flex;
             flex: 1;
             overflow: hidden;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            display: none;
+        }
+
+        .sidebar-overlay.visible {
+            display: block;
         }
 
         .sidebar {
@@ -190,6 +222,15 @@
             margin-bottom: 16px;
             border-radius: 4px;
             overflow: hidden;
+            position: relative;
+        }
+
+        .group-card.dragging {
+            opacity: 0.5;
+        }
+
+        .group-card.drag-over {
+            border: 2px solid #5a8daa;
         }
 
         .group-header {
@@ -199,6 +240,20 @@
             padding: 12px 16px;
             cursor: pointer;
             user-select: none;
+            position: relative;
+        }
+
+        .group-header::before {
+            content: '⋮⋮';
+            position: absolute;
+            left: 4px;
+            color: #666;
+            font-size: 12px;
+            cursor: grab;
+        }
+
+        .group-header:active::before {
+            cursor: grabbing;
         }
 
         .group-header-left {
@@ -229,12 +284,37 @@
             padding: 16px;
             margin-bottom: 8px;
             border-radius: 6px;
-            cursor: pointer;
+            cursor: grab;
             transition: all 0.2s;
+            position: relative;
+        }
+
+        .bookmark-card:active {
+            cursor: grabbing;
         }
 
         .bookmark-card:hover {
             filter: brightness(1.15);
+        }
+
+        .bookmark-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .bookmark-card.drag-over {
+            border-top: 2px solid #5a8daa;
+        }
+
+        .drag-handle {
+            color: #666;
+            cursor: grab;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
         }
 
         .bookmark-icon {
@@ -389,6 +469,62 @@
         input[type="file"] {
             display: none;
         }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -220px;
+                top: 0;
+                height: 100vh;
+                z-index: 100;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block !important;
+            }
+
+            .add-bookmark-form {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .bookmark-card {
+                gap: 12px;
+                padding: 12px;
+            }
+
+            .bookmark-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .bookmark-title {
+                font-size: 14px;
+            }
+
+            .bookmark-url {
+                font-size: 11px;
+            }
+
+            .modal {
+                width: 90%;
+                max-width: 90%;
+            }
+
+            .group-header::before {
+                left: 2px;
+                font-size: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -396,6 +532,7 @@
         <!-- Header -->
         <div class="header">
             <div class="header-left">
+                <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">☰</button>
                 <div class="logo">🔗</div>
                 <div class="app-title">Lynkr Web</div>
             </div>
@@ -406,8 +543,11 @@
 
         <!-- Main Content -->
         <div class="main-content">
+            <!-- Sidebar Overlay for Mobile -->
+            <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar()"></div>
+            
             <!-- Sidebar -->
-            <div class="sidebar">
+            <div class="sidebar" id="sidebar">
                 <div class="tabs-list" id="tabsList"></div>
                 <div class="sidebar-footer">
                     <div class="import-export-buttons">
@@ -446,7 +586,7 @@
     <input type="file" id="fileInput" accept=".lynk,.json" onchange="handleFileImport(event)">
 
     <script>
-        // State
+// State
         let appState = {
             tabs: [],
             currentTab: null,
@@ -468,10 +608,9 @@
         function checkBackupReminder() {
             const lastBackup = localStorage.getItem('lynkr-last-backup');
             const now = Date.now();
-            const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+            const sevenDays = 7 * 24 * 60 * 60 * 1000;
             
             if (!lastBackup || (now - parseInt(lastBackup)) > sevenDays) {
-                // Only show if user has bookmarks
                 const totalBookmarks = appState.tabs.reduce((sum, tab) => {
                     return sum + Object.values(tab.groups || {}).reduce((gSum, group) => {
                         return gSum + (group.bookmarks?.length || 0);
@@ -479,7 +618,7 @@
                 }, 0);
                 
                 if (totalBookmarks > 0) {
-                    setTimeout(() => showBackupReminder(), 2000); // Show after 2 seconds
+                    setTimeout(() => showBackupReminder(), 2000);
                 }
             }
         }
@@ -511,7 +650,6 @@
             `;
             document.body.appendChild(modal);
             
-            // Close on background click
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     dismissBackupReminder(7);
@@ -532,10 +670,7 @@
             const modal = document.querySelector('.modal-overlay');
             if (modal) modal.remove();
             
-            // Mark as backed up
             localStorage.setItem('lynkr-last-backup', Date.now().toString());
-            
-            // Export all tabs automatically
             exportAllTabs();
         }
 
@@ -554,56 +689,15 @@
             }
             
             if (appState.tabs.length === 1) {
-                // Just export single file if only one tab
                 exportCurrentTab();
                 alert('✅ Backup complete! Your tab has been exported.');
                 return;
             }
             
-            // Create a ZIP file with all tabs
             createZipBackup();
         }
 
         async function createZipBackup() {
-            // Using JSZip library - we'll include it inline
-            // Simple ZIP implementation for browser
-            const files = {};
-            
-            appState.tabs.forEach(tab => {
-                const data = {
-                    Name: tab.name,
-                    TabColor: tab.tabColor,
-                    Groups: Object.entries(tab.groups).map(([name, group]) => ({
-                        Name: name,
-                        HeaderColor: group.headerColor,
-                        BackgroundColor: group.backgroundColor,
-                        IsCollapsed: group.isCollapsed,
-                        Order: group.order,
-                        Bookmarks: (group.bookmarks || []).map(b => ({
-                            Title: b.title,
-                            Url: b.url,
-                            ThumbnailUrl: b.thumbnailUrl,
-                            DateAdded: b.dateAdded,
-                            BackgroundColor: b.backgroundColor
-                        }))
-                    })),
-                    name: tab.name,
-                    tabColor: tab.tabColor,
-                    groups: Object.entries(tab.groups).map(([name, group]) => ({
-                        name,
-                        headerColor: group.headerColor,
-                        backgroundColor: group.backgroundColor,
-                        isCollapsed: group.isCollapsed,
-                        order: group.order,
-                        bookmarks: group.bookmarks
-                    }))
-                };
-                
-                files[`${tab.name}.lynk`] = JSON.stringify(data, null, 2);
-            });
-            
-            // Simple approach: Create a single JSON file with all tabs
-            // This is easier than implementing full ZIP in browser
             const backupData = {
                 exportDate: new Date().toISOString(),
                 version: '1.0.0',
@@ -696,8 +790,7 @@
                 }
             }
         }
-
-        // Tabs
+// Tabs
         function createTab(name) {
             if (!name || appState.tabs.some(t => t.name === name)) return;
             
@@ -779,8 +872,7 @@
             saveToStorage();
             renderBookmarks();
         }
-
-        // Bookmarks
+// Bookmarks
         function getFaviconUrl(url) {
             try {
                 const domain = new URL(url).hostname;
@@ -809,7 +901,6 @@
                 url = 'https://' + url;
             }
 
-            // Show group selection dialog
             showGroupSelectionDialog(url);
         }
 
@@ -840,7 +931,6 @@
             `;
             document.body.appendChild(modal);
             
-            // Handle group selection change
             const select = document.getElementById('groupSelect');
             const newGroupInput = document.getElementById('newGroupName');
             
@@ -853,14 +943,12 @@
                 }
             });
             
-            // Close on background click
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     closeGroupDialog();
                 }
             });
             
-            // Focus select
             select.focus();
         }
 
@@ -881,7 +969,6 @@
                     alert('Please enter a group name');
                     return;
                 }
-                // Create the new group if it doesn't exist
                 if (!appState.currentTab.groups[groupName]) {
                     appState.currentTab.groups[groupName] = {
                         bookmarks: [],
@@ -895,7 +982,6 @@
                 groupName = select.value;
             }
             
-            // If no groups exist and user didn't create one, create default
             if (!groupName && Object.keys(appState.currentTab.groups).length === 0) {
                 groupName = 'Bookmarks';
                 appState.currentTab.groups[groupName] = {
@@ -918,7 +1004,6 @@
                 backgroundColor: '#252525'
             });
             
-            // Update tabs array to persist changes
             const tabIndex = appState.tabs.findIndex(t => t.name === appState.currentTab.name);
             if (tabIndex !== -1) {
                 appState.tabs[tabIndex] = appState.currentTab;
@@ -955,7 +1040,7 @@
                 .sort(([, a], [, b]) => (a.order || 0) - (b.order || 0));
 
             container.innerHTML = groups.map(([groupName, group]) => `
-                <div class="group-card">
+                <div class="group-card" draggable="true" data-group="${groupName}">
                     <div class="group-header" style="background-color: ${group.headerColor}; border-bottom: 1px solid #3a3a3d;">
                         <div class="group-header-left" onclick="toggleGroupCollapse('${groupName}')">
                             <span class="chevron ${group.isCollapsed ? 'collapsed' : ''}">▼</span>
@@ -969,9 +1054,13 @@
                             <div 
                                 class="bookmark-card" 
                                 style="background-color: ${bookmark.backgroundColor};"
+                                draggable="true"
+                                data-group="${groupName}"
+                                data-index="${idx}"
                                 ondblclick="window.open('${bookmark.url}', '_blank')"
                                 oncontextmenu="showBookmarkContextMenu(event, '${groupName}', ${idx})"
                             >
+                                <span class="drag-handle">⋮⋮</span>
                                 <img src="${bookmark.thumbnailUrl}" class="bookmark-icon" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22%3E%3Cpath d=%22M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71%22/%3E%3C/svg%3E'">
                                 <div class="bookmark-info">
                                     <div class="bookmark-title">${bookmark.title}</div>
@@ -982,15 +1071,14 @@
                     </div>
                 </div>
             `).join('');
+            
+            setupDragAndDrop();
         }
-
-        // Import/Export
+// Import/Export
         function exportCurrentTab() {
             if (!appState.currentTab) return;
             
-            // Export in BOTH formats for maximum compatibility
             const data = {
-                // PascalCase for C# WPF compatibility
                 Name: appState.currentTab.name,
                 TabColor: appState.currentTab.tabColor,
                 Groups: Object.entries(appState.currentTab.groups).map(([name, group]) => ({
@@ -1007,7 +1095,6 @@
                         BackgroundColor: b.backgroundColor
                     }))
                 })),
-                // camelCase for web version compatibility (fallback)
                 name: appState.currentTab.name,
                 tabColor: appState.currentTab.tabColor,
                 groups: Object.entries(appState.currentTab.groups).map(([name, group]) => ({
@@ -1042,15 +1129,13 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     
-                    console.log('Imported data:', data); // Debug log
+                    console.log('Imported data:', data);
                     
-                    // Check if this is a full backup file (contains multiple tabs)
                     if (data.tabs && Array.isArray(data.tabs)) {
                         importFullBackup(data);
                         return;
                     }
                     
-                    // Otherwise, import as single tab
                     importSingleTab(data);
                     
                 } catch (error) {
@@ -1180,8 +1265,7 @@
             const totalBookmarks = Object.values(newTab.groups).reduce((sum, g) => sum + g.bookmarks.length, 0);
             alert(`✅ Tab imported!\n\n${Object.keys(newTab.groups).length} groups with ${totalBookmarks} bookmarks.`);
         }
-
-        // Context Menus
+// Context Menus
         let activeContextMenu = null;
 
         function closeContextMenu() {
@@ -1198,14 +1282,24 @@
             menu.className = 'context-menu';
             menu.style.left = x + 'px';
             menu.style.top = y + 'px';
-            menu.innerHTML = items.map(item => `
-                <button class="context-menu-item ${item.danger ? 'danger' : ''}" onclick="${item.action}">
-                    ${item.icon} ${item.label}
-                </button>
-            `).join('');
+            menu.innerHTML = items.map(item => 
+                item.label.includes('───') 
+                    ? `<div style="padding: 8px 16px; color: #666; font-size: 11px; text-transform: uppercase; font-weight: 600;">${item.label.replace(/─── | ───/g, '')}</div>`
+                    : `<button class="context-menu-item ${item.danger ? 'danger' : ''}" onclick="${item.action}" ${!item.action ? 'disabled style="opacity: 0.5; cursor: default;"' : ''}>
+                        ${item.icon} ${item.label}
+                    </button>`
+            ).join('');
             
             document.body.appendChild(menu);
             activeContextMenu = menu;
+            
+            const rect = menu.getBoundingClientRect();
+            if (rect.right > window.innerWidth) {
+                menu.style.left = (window.innerWidth - rect.width - 10) + 'px';
+            }
+            if (rect.bottom > window.innerHeight) {
+                menu.style.top = (window.innerHeight - rect.height - 10) + 'px';
+            }
             
             setTimeout(() => {
                 document.addEventListener('click', closeContextMenu, { once: true });
@@ -1226,9 +1320,24 @@
             event.preventDefault();
             event.stopPropagation();
             
-            showContextMenu(event.clientX, event.clientY, [
+            const moveToTabItems = appState.tabs
+                .filter(t => t.name !== appState.currentTab.name)
+                .map(tab => ({
+                    icon: '📋',
+                    label: `Move to ${tab.name}`,
+                    action: `moveBookmarkToTab('${groupName}', ${bookmarkIndex}, '${tab.name}'); closeContextMenu();`
+                }));
+            
+            const items = [
                 { icon: '🗑️', label: 'Delete Bookmark', action: `deleteBookmark('${groupName}', ${bookmarkIndex}); closeContextMenu();`, danger: true }
-            ]);
+            ];
+            
+            if (moveToTabItems.length > 0) {
+                items.unshift({ icon: '📁', label: '─── Move to Tab ───', action: '' });
+                items.unshift(...moveToTabItems);
+            }
+            
+            showContextMenu(event.clientX, event.clientY, items);
         }
 
         function showBackgroundContextMenu(event) {
@@ -1269,14 +1378,261 @@
             document.getElementById('urlInput').value = url;
             addBookmark();
         }
-
-        // Utilities
+// Utilities
         function toggleMaximize() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen();
             } else {
                 document.exitFullscreen();
             }
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+        }
+
+        // Drag and Drop
+        let draggedItem = null;
+        let draggedGroup = null;
+
+        function setupDragAndDrop() {
+            const groupCards = document.querySelectorAll('.group-card');
+            groupCards.forEach(card => {
+                card.addEventListener('dragstart', handleGroupDragStart);
+                card.addEventListener('dragover', handleGroupDragOver);
+                card.addEventListener('drop', handleGroupDrop);
+                card.addEventListener('dragend', handleGroupDragEnd);
+            });
+
+            const bookmarkCards = document.querySelectorAll('.bookmark-card');
+            bookmarkCards.forEach(card => {
+                card.addEventListener('dragstart', handleBookmarkDragStart);
+                card.addEventListener('dragover', handleBookmarkDragOver);
+                card.addEventListener('drop', handleBookmarkDrop);
+                card.addEventListener('dragend', handleBookmarkDragEnd);
+            });
+        }
+
+        function handleGroupDragStart(e) {
+            draggedGroup = e.currentTarget.dataset.group;
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleGroupDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            const afterElement = e.currentTarget;
+            if (afterElement.dataset.group !== draggedGroup) {
+                afterElement.classList.add('drag-over');
+            }
+        }
+
+        function handleGroupDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const dropTarget = e.currentTarget.dataset.group;
+            
+            if (draggedGroup && dropTarget && draggedGroup !== dropTarget) {
+                const groups = Object.entries(appState.currentTab.groups)
+                    .sort(([, a], [, b]) => (a.order || 0) - (b.order || 0));
+                
+                const draggedIndex = groups.findIndex(([name]) => name === draggedGroup);
+                const dropIndex = groups.findIndex(([name]) => name === dropTarget);
+                
+                if (draggedIndex !== -1 && dropIndex !== -1) {
+                    const [removed] = groups.splice(draggedIndex, 1);
+                    groups.splice(dropIndex, 0, removed);
+                    
+                    groups.forEach(([name], index) => {
+                        appState.currentTab.groups[name].order = index;
+                    });
+                    
+                    saveToStorage();
+                    renderBookmarks();
+                }
+            }
+            
+            document.querySelectorAll('.group-card').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+        }
+
+        function handleGroupDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            document.querySelectorAll('.group-card').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            draggedGroup = null;
+        }
+
+        function handleBookmarkDragStart(e) {
+            draggedItem = {
+                group: e.currentTarget.dataset.group,
+                index: parseInt(e.currentTarget.dataset.index)
+            };
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleBookmarkDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            const afterElement = e.currentTarget;
+            if (afterElement.classList.contains('bookmark-card')) {
+                afterElement.classList.add('drag-over');
+            }
+        }
+
+        function handleBookmarkDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const dropGroup = e.currentTarget.dataset.group;
+            const dropIndex = parseInt(e.currentTarget.dataset.index);
+            
+            if (draggedItem && dropGroup) {
+                const sourceGroup = appState.currentTab.groups[draggedItem.group];
+                const targetGroup = appState.currentTab.groups[dropGroup];
+                
+                if (sourceGroup && targetGroup) {
+                    const [bookmark] = sourceGroup.bookmarks.splice(draggedItem.index, 1);
+                    
+                    let insertIndex = dropIndex;
+                    if (draggedItem.group === dropGroup && draggedItem.index < dropIndex) {
+                        insertIndex--;
+                    }
+                    
+                    targetGroup.bookmarks.splice(insertIndex, 0, bookmark);
+                    
+                    saveToStorage();
+                    renderBookmarks();
+                }
+            }
+            
+            document.querySelectorAll('.bookmark-card').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+        }
+
+        function handleBookmarkDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            document.querySelectorAll('.bookmark-card').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            draggedItem = null;
+        }
+
+        function moveBookmarkToTab(fromGroup, bookmarkIndex, toTabName) {
+            const bookmark = appState.currentTab.groups[fromGroup].bookmarks[bookmarkIndex];
+            const targetTab = appState.tabs.find(t => t.name === toTabName);
+            
+            if (!bookmark || !targetTab) return;
+            
+            const targetGroups = Object.keys(targetTab.groups);
+            
+            if (targetGroups.length === 0) {
+                targetTab.groups['Bookmarks'] = {
+                    bookmarks: [],
+                    isCollapsed: false,
+                    order: 0,
+                    headerColor: '#2A2A2A',
+                    backgroundColor: '#1A1A1A'
+                };
+                targetGroups.push('Bookmarks');
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal">
+                    <h3 class="modal-title">Move to ${toTabName}</h3>
+                    <p style="color: #999; font-size: 13px; margin-bottom: 16px;">Select destination group:</p>
+                    <select id="targetGroupSelect" class="modal-input" style="cursor: pointer;">
+                        ${targetGroups.map(g => `<option value="${g}">${g}</option>`).join('')}
+                        <option value="__new__">+ Create New Group</option>
+                    </select>
+                    <input 
+                        type="text" 
+                        id="newTargetGroupName" 
+                        class="modal-input hidden" 
+                        placeholder="New group name..."
+                    >
+                    <div class="modal-buttons">
+                        <button class="btn btn-secondary" onclick="closeMoveDialog()">Cancel</button>
+                        <button class="btn btn-primary" onclick="confirmMoveBookmark('${fromGroup}', ${bookmarkIndex}, '${toTabName}')">Move</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            const select = document.getElementById('targetGroupSelect');
+            const newGroupInput = document.getElementById('newTargetGroupName');
+            
+            select.addEventListener('change', () => {
+                if (select.value === '__new__') {
+                    newGroupInput.classList.remove('hidden');
+                    newGroupInput.focus();
+                } else {
+                    newGroupInput.classList.add('hidden');
+                }
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeMoveDialog();
+                }
+            });
+        }
+
+        function closeMoveDialog() {
+            const modal = document.querySelector('.modal-overlay');
+            if (modal) modal.remove();
+        }
+
+        function confirmMoveBookmark(fromGroup, bookmarkIndex, toTabName) {
+            const select = document.getElementById('targetGroupSelect');
+            const newGroupInput = document.getElementById('newTargetGroupName');
+            const targetTab = appState.tabs.find(t => t.name === toTabName);
+            
+            if (!targetTab) return;
+            
+            let targetGroupName;
+            
+            if (select.value === '__new__') {
+                targetGroupName = newGroupInput.value.trim();
+                if (!targetGroupName) {
+                    alert('Please enter a group name');
+                    return;
+                }
+                if (!targetTab.groups[targetGroupName]) {
+                    targetTab.groups[targetGroupName] = {
+                        bookmarks: [],
+                        isCollapsed: false,
+                        order: Object.keys(targetTab.groups).length,
+                        headerColor: '#2A2A2A',
+                        backgroundColor: '#1A1A1A'
+                    };
+                }
+            } else {
+                targetGroupName = select.value;
+            }
+            
+            const bookmark = appState.currentTab.groups[fromGroup].bookmarks[bookmarkIndex];
+            appState.currentTab.groups[fromGroup].bookmarks.splice(bookmarkIndex, 1);
+            targetTab.groups[targetGroupName].bookmarks.push(bookmark);
+            
+            closeMoveDialog();
+            saveToStorage();
+            renderBookmarks();
+            
+            alert(`✅ Bookmark moved to ${toTabName} → ${targetGroupName}`);
         }
 
         // Initialize app
