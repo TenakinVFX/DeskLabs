@@ -1,0 +1,42 @@
+{
+  "troubleshooting": [
+    {
+      "title": "Downloads failing or stuck?",
+      "body": "The most common fix is updating the download tools. yt-dlp and ffmpeg receive frequent updates to keep up with platform changes. Click \"Update Now\" below."
+    },
+    {
+      "title": "TikTok audio not downloading?",
+      "body": "TikTok regularly changes its API. Updating yt-dlp to the latest version usually resolves this instantly."
+    },
+    {
+      "title": "Video preview shows an error?",
+      "body": "Preview issues rarely affect the actual download. Try clicking Download anyway — it will often succeed even when the preview fails."
+    },
+    {
+      "title": "\"Merging\" step takes a long time?",
+      "body": "High-quality downloads (1080p+) require ffmpeg to merge separate video and audio streams. This is normal and can take a minute or two for longer videos."
+    },
+    {
+      "title": "Format conversion fails (ProRes, DNxHD)?",
+      "body": "Professional codec conversion requires the full ffmpeg GPL build with all codecs. Use \"Update Tools\" to make sure you have the correct build."
+    },
+    {
+      "title": "Instagram / Twitter video not working?",
+      "body": "Private or age-restricted content cannot be downloaded. For Twitter/X, make sure you are using the full post URL including the status ID."
+    }
+  ],
+  "contact": [
+    {
+      "icon": "🌐",
+      "label": "GitHub — Report a bug or request a feature",
+      "value": "github.com/TenakinVFX/DeskTube",
+      "url": "https://github.com/TenakinVFX/DeskTube/issues"
+    },
+    {
+      "icon": "📧",
+      "label": "Support Email",
+      "value": "support email coming soon",
+      "url": ""
+    }
+  ]
+}
