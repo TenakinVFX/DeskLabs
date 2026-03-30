@@ -673,7 +673,9 @@ async function pullFromCloud() {
             const localUpdated = localSavedStr ? new Date(localSavedStr) : new Date(0);
 
             if (cloudUpdated > localUpdated) {
-                const parsed = parseDesktopSaveData(data.data);
+               const parsed = parseDesktopSaveData(
+    typeof data.data === 'string' ? data.data : JSON.stringify(data.data)
+);
                 if (parsed) {
                     appState = parsed;
                     if (!appState.currentTab && appState.tabs.length > 0) {
