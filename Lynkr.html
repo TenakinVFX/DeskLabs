@@ -761,7 +761,9 @@ function sortedGroups(groupsObj) {
 
 function parseDesktopSaveData(jsonStr) {
     try {
-        const raw = JSON.parse(jsonStr);
+        // Desktop C# app double-encodes: keep unwrapping until we get an object
+        let raw = JSON.parse(jsonStr);
+        while (typeof raw === "string") { raw = JSON.parse(raw); }
         const tabs = [];
 
         const rawTabs = raw.Tabs || raw.tabs || [];
