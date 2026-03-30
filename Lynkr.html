@@ -417,12 +417,13 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
-// SUPABASE CONFIG — same project as the desktop app
+// SUPABASE CONFIG
 // ═══════════════════════════════════════════════════════
 const SUPABASE_URL  = 'https://nnybvwigofjmmvjxcyro.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ueWJ2d2lnb2ZqbW12anhjeXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDM3MTIsImV4cCI6MjA4OTkxOTcxMn0.ModLFpK_5FSI-chd51Hmh4Lk65YJ2yHYN5Gv2MUWpJ8';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+// Renamed from 'supabase' to 'sb' to avoid conflict with the global exposed by the CDN script
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ═══════════════════════════════════════════════════════
 // APP STATE
@@ -440,16 +441,14 @@ async function init() {
     renderTabs();
     renderBookmarks();
 
-    // Restore Supabase session
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await sb.auth.getSession();
     if (session?.user) {
         currentUser = session.user;
         updateAccountUI();
         await pullFromCloud();
     }
 
-    // Listen for auth changes (e.g. token refresh)
-    supabase.auth.onAuthStateChange((_event, session) => {
+    sb.auth.onAuthStateChange((_event, session) => {
         currentUser = session?.user ?? null;
         updateAccountUI();
     });
@@ -544,27 +543,26 @@ function showAuthModal() {
         setTimeout(() => document.getElementById('authEmail')?.focus(), 50);
     }
 
-    // These MUST be assigned before render() is called
     window.authSetMode = (m) => { mode = m; render(); };
 
     window.authSubmit = async () => {
         const email = document.getElementById('authEmail')?.value.trim();
         const password = document.getElementById('authPassword')?.value;
         const btn = document.getElementById('authSubmitBtn');
-        const alert = document.getElementById('authAlert');
+        const alertEl = document.getElementById('authAlert');
 
         if (!email) return showAuthAlert('Please enter your email.', 'error');
 
         btn.disabled = true;
         btn.textContent = 'Please wait…';
-        alert.className = 'alert-banner';
+        alertEl.className = 'alert-banner';
 
         try {
             if (mode === 'signin') {
                 if (!password) { showAuthAlert('Please enter your password.', 'error'); btn.disabled = false; btn.textContent = 'Sign In'; return; }
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                const { error } = await sb.auth.signInWithPassword({ email, password });
                 if (error) throw error;
-                const { data: { session } } = await supabase.auth.getSession();
+                const { data: { session } } = await sb.auth.getSession();
                 currentUser = session?.user ?? null;
                 updateAccountUI();
                 closeAllOverlays();
@@ -574,7 +572,7 @@ function showAuthModal() {
             } else if (mode === 'signup') {
                 if (!password) { showAuthAlert('Please enter a password.', 'error'); btn.disabled = false; btn.textContent = 'Create Account'; return; }
                 if (password.length < 6) { showAuthAlert('Password must be at least 6 characters.', 'error'); btn.disabled = false; btn.textContent = 'Create Account'; return; }
-                const { data, error } = await supabase.auth.signUp({ email, password });
+                const { data, error } = await sb.auth.signUp({ email, password });
                 if (error) throw error;
                 if (data?.session) {
                     currentUser = data.session.user;
@@ -587,7 +585,7 @@ function showAuthModal() {
                 }
 
             } else if (mode === 'reset') {
-                const { error } = await supabase.auth.resetPasswordForEmail(email);
+                const { error } = await sb.auth.resetPasswordForEmail(email);
                 if (error) throw error;
                 showAuthAlert('Password reset email sent! Check your inbox.', 'success');
             }
@@ -606,11 +604,11 @@ function showAuthModal() {
         el.className = 'alert-banner alert-' + type;
     }
 
-    // render() comes AFTER the function assignments above
     render();
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if (e.target === overlay) closeAllOverlays(); });
 }
+
 function cleanAuthError(msg) {
     if (msg.includes('Invalid login credentials')) return 'Invalid email or password.';
     if (msg.includes('User already registered')) return 'An account with this email already exists.';
@@ -621,14 +619,14 @@ function cleanAuthError(msg) {
 
 async function signOut() {
     closeAllOverlays();
-    await supabase.auth.signOut();
+    await sb.auth.signOut();
     currentUser = null;
     updateAccountUI();
     setSyncStatus('Signed out');
 }
 
 // ═══════════════════════════════════════════════════════
-// CLOUD SYNC — same table as desktop: lynkr_bookmarks
+// CLOUD SYNC
 // ═══════════════════════════════════════════════════════
 async function pushToCloud() {
     if (!currentUser) return;
@@ -639,7 +637,7 @@ async function pushToCloud() {
 
     try {
         const saveDataJson = buildSaveDataJson();
-        const { error } = await supabase
+        const { error } = await sb
             .from('lynkr_bookmarks')
             .upsert({ id: currentUser.id, user_id: currentUser.id, data: saveDataJson });
         if (error) throw error;
@@ -661,7 +659,7 @@ async function pullFromCloud() {
     syncBtn.classList.add('syncing');
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await sb
             .from('lynkr_bookmarks')
             .select('data, updated_at')
             .eq('user_id', currentUser.id)
@@ -675,7 +673,6 @@ async function pullFromCloud() {
             const localUpdated = localSavedStr ? new Date(localSavedStr) : new Date(0);
 
             if (cloudUpdated > localUpdated) {
-                // Cloud is newer — load it
                 const parsed = parseDesktopSaveData(data.data);
                 if (parsed) {
                     appState = parsed;
@@ -690,13 +687,11 @@ async function pullFromCloud() {
                     setSyncStatus('Cloud data unreadable');
                 }
             } else if (localUpdated > cloudUpdated) {
-                // Local is newer — push it
                 await pushToCloud();
             } else {
                 setSyncStatus('Up to date ' + fmtTime());
             }
         } else {
-            // No cloud data yet — push local
             await pushToCloud();
         }
     } catch (e) {
@@ -713,17 +708,17 @@ async function manualSync() {
     await pullFromCloud();
 }
 
-// Build JSON in the SAME format the C# desktop app uses (PascalCase SaveData)
+// ═══════════════════════════════════════════════════════
+// SAVE DATA HELPERS
+// ═══════════════════════════════════════════════════════
 function buildSaveDataJson() {
     const standaloneTabs = appState.tabs.filter(t => !t.parentContainer);
-
     const data = {
         BackgroundColor: appState.backgroundColor || '#212121',
         CurrentTab: appState.currentTab?.name || '',
         TabContainers: [],
         Tabs: standaloneTabs.map(tabToTabData)
     };
-
     return JSON.stringify(data, null, 2);
 }
 
@@ -762,31 +757,21 @@ function sortedGroups(groupsObj) {
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 }
 
-// Parse desktop SaveData JSON into web appState
 function parseDesktopSaveData(jsonStr) {
     try {
         const raw = JSON.parse(jsonStr);
-
-        // Support both desktop format (PascalCase) and web format (camelCase)
         const tabs = [];
 
-        // Desktop standalone tabs
         const rawTabs = raw.Tabs || raw.tabs || [];
-        rawTabs.forEach(td => {
-            tabs.push(parseTabData(td));
-        });
+        rawTabs.forEach(td => { tabs.push(parseTabData(td)); });
 
-        // Desktop container tabs — flatten into tabs (web doesn't have containers yet)
         const rawContainers = raw.TabContainers || raw.tabContainers || [];
         rawContainers.forEach(c => {
-            (c.Tabs || c.tabs || []).forEach(td => {
-                tabs.push(parseTabData(td));
-            });
+            (c.Tabs || c.tabs || []).forEach(td => { tabs.push(parseTabData(td)); });
         });
 
         const bgColor = raw.BackgroundColor || raw.backgroundColor || '#212121';
         const currentTabName = raw.CurrentTab || raw.currentTab || '';
-
         const currentTab = tabs.find(t => t.name === currentTabName) || tabs[0] || null;
 
         return { tabs, currentTab, backgroundColor: bgColor };
@@ -836,7 +821,6 @@ function loadFromLocalStorage() {
         const raw = localStorage.getItem('lynkr-data');
         if (raw) {
             const parsed = JSON.parse(raw);
-            // Handle both direct format and desktop format
             if (parsed.tabs) {
                 appState = parsed;
                 if (!appState.currentTab && appState.tabs.length > 0) {
@@ -1021,7 +1005,6 @@ function showGroupSelectDialog(url, onDone) {
 
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('addBmModal'); });
-
     if (onDone) overlay._onDone = onDone;
 }
 
@@ -1252,7 +1235,6 @@ function showCtxMenu(x, y, items) {
     document.body.appendChild(menu);
     _activeCtx = menu;
 
-    // Position
     const mw = 200, mh = items.length * 36;
     menu.style.left = Math.min(x, window.innerWidth - mw - 8) + 'px';
     menu.style.top = Math.min(y, window.innerHeight - mh - 8) + 'px';
@@ -1300,7 +1282,7 @@ function dlJson(data, filename) {
     URL.revokeObjectURL(url);
 }
 
-// Clipboard monitoring — auto-fill URL bar
+// Clipboard monitoring
 let _lastClip = '';
 setInterval(() => {
     if (document.hasFocus()) {
@@ -1323,7 +1305,6 @@ document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { addBookmark(); e.preventDefault(); }
 });
 
-// ─────────────────────────────
 init();
 </script>
 </body>
