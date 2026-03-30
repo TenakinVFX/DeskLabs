@@ -867,16 +867,18 @@ function switchTab(tabName) {
 
 function renderTabs() {
     const container = document.getElementById('tabsList');
-    container.innerHTML = appState.tabs.map(tab => {
+    container.innerHTML = '';
+    appState.tabs.forEach(tab => {
         const isActive = appState.currentTab?.name === tab.name;
-        const style = isActive ? `background-color:${tab.tabColor};color:white;` : '';
-        return `<button class="tab-button${isActive ? ' active' : ''}" style="${style}"
-            onclick="switchTab(${JSON.stringify(tab.name)})"
-            oncontextmenu="showTabCtxMenu(event, ${JSON.stringify(tab.name)})"
-        >${tab.name}</button>`;
-    }).join('');
+        const btn = document.createElement('button');
+        btn.className = 'tab-button' + (isActive ? ' active' : '');
+        btn.textContent = tab.name;
+        if (isActive) btn.style.cssText = `background-color:${tab.tabColor};color:white;`;
+        btn.onclick = () => switchTab(tab.name);
+        btn.oncontextmenu = (e) => { e.preventDefault(); showTabCtxMenu(e, tab.name); };
+        container.appendChild(btn);
+    });
 }
-
 function showAddTabDialog() {
     const name = prompt('Tab name:');
     if (name?.trim()) createTab(name.trim());
@@ -1097,6 +1099,7 @@ function showBmCtxMenu(event, groupName, idx) {
 function renderBookmarks() {
     const container = document.getElementById('bookmarksArea');
     container.style.backgroundColor = appState.backgroundColor;
+    container.innerHTML = '';
 
     if (!appState.currentTab) {
         container.innerHTML = '<div class="empty-state"><div class="icon">🔗</div><p>No tab selected.<br>Create a tab to get started.</p></div>';
@@ -1110,35 +1113,59 @@ function renderBookmarks() {
         return;
     }
 
-    container.innerHTML = groups.map(group => {
-        const bookmarksHtml = (group.bookmarks || []).map((bm, idx) => `
-            <div class="bookmark-card" style="background-color:${bm.backgroundColor}"
-                ondblclick="window.open(${JSON.stringify(bm.url)}, '_blank')"
-                oncontextmenu="showBmCtxMenu(event, ${JSON.stringify(group.name)}, ${idx})">
-                <img src="${bm.thumbnailUrl || getFaviconUrl(bm.url)}" class="bookmark-icon"
-                    onerror="this.style.display='none'">
-                <div class="bookmark-info">
-                    <div class="bookmark-title">${escHtml(bm.title)}</div>
-                    <div class="bookmark-url">${escHtml(bm.url)}</div>
-                </div>
-            </div>
-        `).join('');
+    groups.forEach(group => {
+        const groupCard = document.createElement('div');
+        groupCard.className = 'group-card';
 
-        return `
-        <div class="group-card">
-            <div class="group-header" style="background-color:${group.headerColor}">
-                <div class="group-header-left" onclick="toggleGroup(${JSON.stringify(group.name)})">
-                    <span class="chevron${group.isCollapsed ? ' collapsed' : ''}">▼</span>
-                    <span class="group-title">${escHtml(group.name)}</span>
-                    <span class="group-count">(${(group.bookmarks||[]).length})</span>
-                </div>
-                <button class="more-btn" onclick="showGroupCtxMenu(event, ${JSON.stringify(group.name)})">⋮</button>
-            </div>
-            <div class="group-content${group.isCollapsed ? ' hidden' : ''}" style="background-color:${group.backgroundColor}">
-                ${bookmarksHtml || '<p style="color:#555;font-size:13px">No bookmarks yet. Right-click to add one.</p>'}
-            </div>
-        </div>`;
-    }).join('');
+        const header = document.createElement('div');
+        header.className = 'group-header';
+        header.style.backgroundColor = group.headerColor;
+
+        const headerLeft = document.createElement('div');
+        headerLeft.className = 'group-header-left';
+        headerLeft.onclick = () => toggleGroup(group.name);
+        headerLeft.innerHTML = `
+            <span class="chevron${group.isCollapsed ? ' collapsed' : ''}">▼</span>
+            <span class="group-title">${escHtml(group.name)}</span>
+            <span class="group-count">(${(group.bookmarks||[]).length})</span>
+        `;
+
+        const moreBtn = document.createElement('button');
+        moreBtn.className = 'more-btn';
+        moreBtn.textContent = '⋮';
+        moreBtn.onclick = (e) => showGroupCtxMenu(e, group.name);
+
+        header.appendChild(headerLeft);
+        header.appendChild(moreBtn);
+
+        const content = document.createElement('div');
+        content.className = 'group-content' + (group.isCollapsed ? ' hidden' : '');
+        content.style.backgroundColor = group.backgroundColor;
+
+        if (!group.bookmarks || group.bookmarks.length === 0) {
+            content.innerHTML = '<p style="color:#555;font-size:13px">No bookmarks yet. Right-click to add one.</p>';
+        } else {
+            group.bookmarks.forEach((bm, idx) => {
+                const card = document.createElement('div');
+                card.className = 'bookmark-card';
+                card.style.backgroundColor = bm.backgroundColor;
+                card.innerHTML = `
+                    <img src="${bm.thumbnailUrl || getFaviconUrl(bm.url)}" class="bookmark-icon" onerror="this.style.display='none'">
+                    <div class="bookmark-info">
+                        <div class="bookmark-title">${escHtml(bm.title)}</div>
+                        <div class="bookmark-url">${escHtml(bm.url)}</div>
+                    </div>
+                `;
+                card.ondblclick = () => window.open(bm.url, '_blank');
+                card.oncontextmenu = (e) => { e.preventDefault(); showBmCtxMenu(e, group.name, idx); };
+                content.appendChild(card);
+            });
+        }
+
+        groupCard.appendChild(header);
+        groupCard.appendChild(content);
+        container.appendChild(groupCard);
+    });
 }
 
 function showBgContextMenu(event) {
