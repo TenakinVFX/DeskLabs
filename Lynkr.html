@@ -452,6 +452,10 @@ async function init() {
         currentUser = session?.user ?? null;
         updateAccountUI();
     });
+    // Poll for cloud changes every 5 minutes
+setInterval(async () => {
+    if (currentUser) await pullFromCloud();
+}, 5 * 60 * 1000);
 }
 
 // ═══════════════════════════════════════════════════════
