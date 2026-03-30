@@ -501,7 +501,7 @@ function showAccountDropdown() {
 
 function showAuthModal() {
     closeAllOverlays();
-    let mode = 'signin'; // 'signin' | 'signup' | 'reset'
+    let mode = 'signin';
 
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -526,12 +526,9 @@ function showAuthModal() {
                         ? 'Sign in to sync your bookmarks across devices'
                         : 'Create a free account to back up and sync your bookmarks'}
                 </p>
-
                 <div id="authAlert" class="alert-banner"></div>
-
                 <label class="field-label">Email</label>
                 <input class="field-input" type="email" id="authEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter') authSubmit()">
-
                 ${mode !== 'reset' ? `
                 <label class="field-label">Password</label>
                 <input class="field-input" type="password" id="authPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter') authSubmit()">
@@ -539,16 +536,15 @@ function showAuthModal() {
                 ` : `
                 <p style="font-size:13px;color:#aaa;margin-bottom:16px">Enter your email to receive a password reset link.</p>
                 `}
-
                 <button class="auth-action-btn" id="authSubmitBtn" onclick="authSubmit()">
                     ${isSignIn ? 'Sign In' : isSignUp ? 'Create Account' : 'Send Reset Email'}
                 </button>
             </div>
         </div>`;
-        // focus email
         setTimeout(() => document.getElementById('authEmail')?.focus(), 50);
     }
 
+    // These MUST be assigned before render() is called
     window.authSetMode = (m) => { mode = m; render(); };
 
     window.authSubmit = async () => {
@@ -610,12 +606,11 @@ function showAuthModal() {
         el.className = 'alert-banner alert-' + type;
     }
 
-    document.body.appendChild(overlay);
+    // render() comes AFTER the function assignments above
     render();
-
+    document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if (e.target === overlay) closeAllOverlays(); });
 }
-
 function cleanAuthError(msg) {
     if (msg.includes('Invalid login credentials')) return 'Invalid email or password.';
     if (msg.includes('User already registered')) return 'An account with this email already exists.';
