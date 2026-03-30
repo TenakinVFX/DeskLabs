@@ -359,6 +359,7 @@
         }
         .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
         .empty-state p { font-size: 14px; line-height: 1.6; }
+        #addGroupBtn { display: none; }   /* ADD THIS LINE */
         /* ── Mobile ── */
 .hamburger {
     display: none;
@@ -382,7 +383,13 @@
 
 @media (max-width: 768px) {
     .hamburger { display: block; }
-
+    #addGroupBtn { display: block; }
+    .add-bookmark-form {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+    }
+    .add-bookmark-form .url-input { grid-column: 1 / -1; }
     .sidebar {
         position: fixed;
         left: -280px;
@@ -394,21 +401,12 @@
     }
     .sidebar.open { left: 0; }
     .sidebar-overlay.open { display: block; }
-
     .header {
         padding: 12px 16px;
         min-height: 56px;
     }
-
-    .add-bookmark-bar {
-        padding: 12px;
-    }
-    .add-bookmark-form {
-        flex-direction: column;
-        gap: 8px;
-    }
+    .add-bookmark-bar { padding: 12px; }
     .add-bookmark-form .btn {
-        width: 100%;
         padding: 12px;
         font-size: 15px;
     }
@@ -416,37 +414,26 @@
         padding: 12px;
         font-size: 15px;
     }
-
     .bookmarks-area {
         padding: 12px;
-        /* account for mobile browser chrome top and bottom */
         padding-bottom: env(safe-area-inset-bottom, 20px);
     }
-
     .bookmark-card {
         padding: 12px;
         height: auto;
         min-height: 70px;
     }
-    .bookmark-icon {
-        width: 36px;
-        height: 36px;
-    }
+    .bookmark-icon { width: 36px; height: 36px; }
     .bookmark-title { font-size: 13px; }
     .bookmark-url { font-size: 11px; }
-
     .group-header { padding: 14px 12px; }
     .group-title { font-size: 14px; }
-
     .status-bar { display: none; }
-
     .header-right { gap: 6px; }
     .account-btn { padding: 7px 10px; font-size: 12px; }
     .sync-btn { padding: 7px; }
-
     .modal { width: 95vw; }
     .modal-body { padding: 16px; }
-
     .more-btn { padding: 8px 10px; font-size: 20px; }
 }
     </style>
@@ -487,12 +474,13 @@
         <!-- Content -->
         <div class="content-area">
             <div class="add-bookmark-bar">
-                <div class="add-bookmark-form">
-                    <input type="text" id="urlInput" class="url-input" placeholder="Paste or type a URL..."
-                        onkeydown="if(event.key==='Enter') addBookmark()">
-                    <button class="btn btn-primary" onclick="addBookmark()">Add Bookmark</button>
-                </div>
-            </div>
+    <div class="add-bookmark-form">
+        <input type="text" id="urlInput" class="url-input" placeholder="Paste or type a URL..."
+            onkeydown="if(event.key==='Enter') addBookmark()">
+        <button class="btn btn-primary" onclick="addBookmark()">Add Bookmark</button>
+        <button class="btn btn-secondary" onclick="showAddGroupDialog()" id="addGroupBtn">📁 Group</button>
+    </div>
+</div>
             <div class="bookmarks-area" id="bookmarksArea" oncontextmenu="showBgContextMenu(event)"></div>
             <div class="status-bar">
                 <span>Lynkr Web</span>
@@ -1098,6 +1086,7 @@ function addBookmark() {
 
 function showGroupSelectDialog(url, onDone) {
     const groups = Object.keys(appState.currentTab?.groups || {});
+    const hasGroups = groups.length > 0;
     const overlay = mkOverlay('addBmModal');
 
     overlay.innerHTML = `
@@ -1108,11 +1097,12 @@ function showGroupSelectDialog(url, onDone) {
         </div>
         <div class="modal-body">
             <label class="field-label">Group</label>
+            ${hasGroups ? `
             <select class="select-input" id="groupSel">
                 ${groups.map(g => `<option value="${g}">${g}</option>`).join('')}
                 <option value="__new__">+ Create new group…</option>
-            </select>
-            <input class="field-input hidden" id="newGroupInput" placeholder="New group name…">
+            </select>` : ''}
+            <input class="field-input${hasGroups ? ' hidden' : ''}" id="newGroupInput" placeholder="New group name…">
             <div class="modal-btns">
                 <button class="btn btn-secondary" id="addBmCancel">Cancel</button>
                 <button class="btn btn-primary" id="addBmConfirm">Add</button>
@@ -1122,28 +1112,34 @@ function showGroupSelectDialog(url, onDone) {
 
     document.body.appendChild(overlay);
 
+    if (!hasGroups) {
+        setTimeout(() => document.getElementById('newGroupInput')?.focus(), 50);
+    }
+
     document.getElementById('addBmClose').onclick = () => closeModal('addBmModal');
     document.getElementById('addBmCancel').onclick = () => closeModal('addBmModal');
     overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('addBmModal'); });
 
-    document.getElementById('groupSel').onchange = () => {
-        const sel = document.getElementById('groupSel');
-        const inp = document.getElementById('newGroupInput');
-        inp.classList.toggle('hidden', sel.value !== '__new__');
-        if (sel.value === '__new__') inp.focus();
-    };
+    if (hasGroups) {
+        document.getElementById('groupSel').onchange = () => {
+            const sel = document.getElementById('groupSel');
+            const inp = document.getElementById('newGroupInput');
+            inp.classList.toggle('hidden', sel.value !== '__new__');
+            if (sel.value === '__new__') inp.focus();
+        };
+    }
 
     document.getElementById('addBmConfirm').onclick = () => {
         const sel = document.getElementById('groupSel');
         const newInp = document.getElementById('newGroupInput');
         let groupName;
 
-        if (!sel || (groups.length === 0 && sel.value === '__new__') || sel.value === '__new__') {
+        if (!hasGroups || sel?.value === '__new__') {
             groupName = newInp?.value.trim();
             if (!groupName) { alert('Enter a group name.'); return; }
             if (!appState.currentTab.groups[groupName]) createGroupObj(groupName);
         } else {
-            groupName = sel.value;
+            groupName = sel?.value;
         }
 
         if (!groupName) { alert('Please select or create a group.'); return; }
