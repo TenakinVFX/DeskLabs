@@ -993,25 +993,63 @@ function showGroupSelectDialog(url, onDone) {
     <div class="modal">
         <div class="modal-header">
             <h3>Add Bookmark</h3>
-            <button class="modal-close" onclick="closeModal('addBmModal')">✕</button>
+            <button class="modal-close" id="addBmClose">✕</button>
         </div>
         <div class="modal-body">
             <label class="field-label">Group</label>
-            <select class="select-input" id="groupSel" onchange="handleGroupSelChange()">
+            <select class="select-input" id="groupSel">
                 ${groups.map(g => `<option value="${g}">${g}</option>`).join('')}
                 <option value="__new__">+ Create new group…</option>
             </select>
             <input class="field-input hidden" id="newGroupInput" placeholder="New group name…">
             <div class="modal-btns">
-                <button class="btn btn-secondary" onclick="closeModal('addBmModal')">Cancel</button>
-                <button class="btn btn-primary" onclick="confirmAddBm(${JSON.stringify(url)})">Add</button>
+                <button class="btn btn-secondary" id="addBmCancel">Cancel</button>
+                <button class="btn btn-primary" id="addBmConfirm">Add</button>
             </div>
         </div>
     </div>`;
 
     document.body.appendChild(overlay);
+
+    document.getElementById('addBmClose').onclick = () => closeModal('addBmModal');
+    document.getElementById('addBmCancel').onclick = () => closeModal('addBmModal');
     overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('addBmModal'); });
-    if (onDone) overlay._onDone = onDone;
+
+    document.getElementById('groupSel').onchange = () => {
+        const sel = document.getElementById('groupSel');
+        const inp = document.getElementById('newGroupInput');
+        inp.classList.toggle('hidden', sel.value !== '__new__');
+        if (sel.value === '__new__') inp.focus();
+    };
+
+    document.getElementById('addBmConfirm').onclick = () => {
+        const sel = document.getElementById('groupSel');
+        const newInp = document.getElementById('newGroupInput');
+        let groupName;
+
+        if (!sel || (groups.length === 0 && sel.value === '__new__') || sel.value === '__new__') {
+            groupName = newInp?.value.trim();
+            if (!groupName) { alert('Enter a group name.'); return; }
+            if (!appState.currentTab.groups[groupName]) createGroupObj(groupName);
+        } else {
+            groupName = sel.value;
+        }
+
+        if (!groupName) { alert('Please select or create a group.'); return; }
+
+        appState.currentTab.groups[groupName].bookmarks.push({
+            title: getPageTitle(url),
+            url,
+            thumbnailUrl: getFaviconUrl(url),
+            dateAdded: new Date().toISOString(),
+            backgroundColor: '#252525'
+        });
+
+        if (onDone) onDone();
+        closeModal('addBmModal');
+        saveAndSync();
+        renderBookmarks();
+    };
 }
 
 window.handleGroupSelChange = () => {
