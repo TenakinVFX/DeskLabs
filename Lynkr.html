@@ -1285,7 +1285,7 @@ function dlJson(data, filename) {
 // Clipboard monitoring
 let _lastClip = '';
 setInterval(() => {
-    if (document.hasFocus()) {
+    if (document.hasFocus() && !document.getElementById('authModal') && !document.getElementById('addBmModal')) {
         navigator.clipboard?.readText?.().then(text => {
             if (text !== _lastClip && /^(https?:\/\/|www\.)[^\s]+$/.test(text)) {
                 _lastClip = text;
