@@ -637,9 +637,9 @@ async function pushToCloud() {
 
     try {
         const saveDataJson = buildSaveDataJson();
-        const { error } = await sb
-            .from('lynkr_bookmarks')
-            .upsert({ id: currentUser.id, user_id: currentUser.id, data: saveDataJson });
+const { error } = await sb
+    .from('lynkr_bookmarks')
+    .upsert({ id: currentUser.id, user_id: currentUser.id, data: JSON.parse(saveDataJson) });
         if (error) throw error;
         setSyncStatus('Synced ' + fmtTime());
     } catch (e) {
