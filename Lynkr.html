@@ -533,7 +533,6 @@ let isSyncing = false;
 // ═══════════════════════════════════════════════════════
 async function init() {
     loadFromLocalStorage();
-    if (appState.tabs.length === 0) createTab('Default');
     renderTabs();
     renderBookmarks();
 
@@ -544,14 +543,19 @@ async function init() {
         await pullFromCloud();
     }
 
+    // Only create default tab if still nothing after cloud pull
+    if (appState.tabs.length === 0) createTab('Default');
+    renderTabs();
+    renderBookmarks();
+
     sb.auth.onAuthStateChange((_event, session) => {
         currentUser = session?.user ?? null;
         updateAccountUI();
     });
-    // Poll for cloud changes every 5 minutes
-setInterval(async () => {
-    if (currentUser) await pullFromCloud();
-}, 5 * 60 * 1000);
+
+    setInterval(async () => {
+        if (currentUser) await pullFromCloud();
+    }, 5 * 60 * 1000);
 }
 
 // ═══════════════════════════════════════════════════════
