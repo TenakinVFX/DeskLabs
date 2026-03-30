@@ -1297,12 +1297,26 @@ function showCtxMenu(x, y, items) {
     const menu = document.createElement('div');
     menu.className = 'context-menu';
     menu.id = '_ctxMenu';
-    menu.innerHTML = items.map(item => item.sep
-        ? '<hr class="ctx-sep">'
-        : `<button class="ctx-item${item.danger ? ' danger' : ''}" onclick="${item.action}; closeAllOverlays()">${item.icon} ${item.label}</button>`
-    ).join('');
+    
+    items.forEach(item => {
+        if (item.sep) {
+            const hr = document.createElement('hr');
+            hr.className = 'ctx-sep';
+            menu.appendChild(hr);
+        } else {
+            const btn = document.createElement('button');
+            btn.className = 'ctx-item' + (item.danger ? ' danger' : '');
+            btn.innerHTML = `${item.icon} ${item.label}`;
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                closeAllOverlays();
+                item.action();
+            };
+            menu.appendChild(btn);
+        }
+    });
+
     document.body.appendChild(menu);
-    _activeCtx = menu;
 
     const mw = 200, mh = items.length * 36;
     menu.style.left = Math.min(x, window.innerWidth - mw - 8) + 'px';
