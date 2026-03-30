@@ -359,26 +359,116 @@
         }
         .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
         .empty-state p { font-size: 14px; line-height: 1.6; }
+        /* ── Mobile ── */
+.hamburger {
+    display: none;
+    background: transparent;
+    border: none;
+    color: #e0e0e0;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+}
+.hamburger:hover { background: #2a2a2a; }
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 500;
+}
+
+@media (max-width: 768px) {
+    .hamburger { display: block; }
+
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 600;
+        transition: left 0.25s ease;
+    }
+    .sidebar.open { left: 0; }
+    .sidebar-overlay.open { display: block; }
+
+    .header {
+        padding: 12px 16px;
+        min-height: 56px;
+    }
+
+    .add-bookmark-bar {
+        padding: 12px;
+    }
+    .add-bookmark-form {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .add-bookmark-form .btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 15px;
+    }
+    .url-input {
+        padding: 12px;
+        font-size: 15px;
+    }
+
+    .bookmarks-area {
+        padding: 12px;
+        /* account for mobile browser chrome top and bottom */
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    .bookmark-card {
+        padding: 12px;
+        height: auto;
+        min-height: 70px;
+    }
+    .bookmark-icon {
+        width: 36px;
+        height: 36px;
+    }
+    .bookmark-title { font-size: 13px; }
+    .bookmark-url { font-size: 11px; }
+
+    .group-header { padding: 14px 12px; }
+    .group-title { font-size: 14px; }
+
+    .status-bar { display: none; }
+
+    .header-right { gap: 6px; }
+    .account-btn { padding: 7px 10px; font-size: 12px; }
+    .sync-btn { padding: 7px; }
+
+    .modal { width: 95vw; }
+    .modal-body { padding: 16px; }
+
+    .more-btn { padding: 8px 10px; font-size: 20px; }
+}
     </style>
 </head>
 <body>
 <div class="app">
-
+ <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>  <!-- ADD THIS -->
     <!-- ── Header ── -->
     <div class="header">
-        <div class="header-left">
-            <div class="logo">🔗</div>
-            <div class="app-title">Lynkr</div>
-        </div>
-        <div class="header-right">
-            <button class="sync-btn" id="syncBtn" title="Sync with cloud" onclick="manualSync()">⟳</button>
-            <button class="account-btn" id="accountBtn" onclick="handleAccountClick()">
-                <span class="dot offline" id="statusDot"></span>
-                <span id="accountLabel">☁ Sign In</span>
-            </button>
-        </div>
+    <div class="header-left">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <div class="logo">🔗</div>
+        <div class="app-title">Lynkr</div>
     </div>
-
+    <div class="header-right">
+        <button class="sync-btn" id="syncBtn" title="Sync with cloud" onclick="manualSync()">⟳</button>
+        <button class="account-btn" id="accountBtn" onclick="handleAccountClick()">
+            <span class="dot offline" id="statusDot"></span>
+            <span id="accountLabel">☁ Sign In</span>
+        </button>
+    </div>
+</div>
     <!-- ── Main ── -->
     <div class="main-content">
 
@@ -432,6 +522,12 @@ let appState = { tabs: [], currentTab: null, backgroundColor: '#212121' };
 let currentUser = null;
 let isSyncing = false;
 
+    function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+}
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
@@ -867,6 +963,13 @@ function switchTab(tabName) {
     saveToLocalStorage();
     renderTabs();
     renderBookmarks();
+    // Close sidebar on mobile after selecting a tab
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (window.innerWidth <= 768) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+    }
 }
 
 function renderTabs() {
