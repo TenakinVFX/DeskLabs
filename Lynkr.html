@@ -1307,20 +1307,28 @@ function renderBookmarks() {
             content.innerHTML = '<p style="color:#555;font-size:13px">No bookmarks yet. Right-click to add one.</p>';
         } else {
             group.bookmarks.forEach((bm, idx) => {
-                const card = document.createElement('div');
-                card.className = 'bookmark-card';
-                card.style.backgroundColor = bm.backgroundColor;
-                card.innerHTML = `
-                    <img src="${bm.thumbnailUrl || getFaviconUrl(bm.url)}" class="bookmark-icon" onerror="this.style.display='none'">
-                    <div class="bookmark-info">
-                        <div class="bookmark-title">${escHtml(bm.title)}</div>
-                        <div class="bookmark-url">${escHtml(bm.url)}</div>
-                    </div>
-                `;
-                card.ondblclick = () => window.open(bm.url, '_blank');
-                card.oncontextmenu = (e) => { e.preventDefault(); showBmCtxMenu(e, group.name, idx); };
-                content.appendChild(card);
-            });
+    const card = document.createElement('div');
+    card.className = 'bookmark-card';
+    card.style.backgroundColor = bm.backgroundColor;
+    card.innerHTML = `
+        <img src="${bm.thumbnailUrl || getFaviconUrl(bm.url)}" class="bookmark-icon" onerror="this.style.display='none'">
+        <div class="bookmark-info">
+            <div class="bookmark-title">${escHtml(bm.title)}</div>
+            <div class="bookmark-url">${escHtml(bm.url)}</div>
+        </div>
+        <button class="more-btn" style="flex-shrink:0;padding:8px 10px;font-size:20px;">⋮</button>
+    `;
+
+    card.ondblclick = () => window.open(bm.url, '_blank');
+    card.oncontextmenu = (e) => { e.preventDefault(); showBmCtxMenu(e, group.name, idx); };
+    card.querySelector('.more-btn').onclick = (e) => {
+        e.stopPropagation();
+        showBmCtxMenu(e, group.name, idx);
+    };
+
+    content.appendChild(card);
+});
+
         }
 
         groupCard.appendChild(header);
