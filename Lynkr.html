@@ -888,10 +888,10 @@ function showTabCtxMenu(event, tabName) {
     event.preventDefault();
     event.stopPropagation();
     showCtxMenu(event.clientX, event.clientY, [
-        { icon: '📤', label: 'Export tab', action: `exportTabByName(${JSON.stringify(tabName)})` },
-        { icon: '✏️', label: 'Rename tab', action: `renameTab(${JSON.stringify(tabName)})` },
+        { icon: '📤', label: 'Export tab', action: () => exportTabByName(tabName) },
+        { icon: '✏️', label: 'Rename tab', action: () => renameTab(tabName) },
         { sep: true },
-        { icon: '🗑️', label: 'Delete tab', action: `deleteTab(${JSON.stringify(tabName)})`, danger: true }
+        { icon: '🗑️', label: 'Delete tab', action: () => deleteTab(tabName), danger: true }
     ]);
 }
 
@@ -955,9 +955,9 @@ function showGroupCtxMenu(event, groupName) {
     event.preventDefault();
     event.stopPropagation();
     showCtxMenu(event.clientX, event.clientY, [
-        { icon: '➕', label: 'Add bookmark', action: `showAddBmDialog(${JSON.stringify(groupName)})` },
+        { icon: '➕', label: 'Add bookmark', action: () => showAddBmDialog(groupName) },
         { sep: true },
-        { icon: '🗑️', label: 'Delete group', action: `deleteGroup(${JSON.stringify(groupName)})`, danger: true }
+        { icon: '🗑️', label: 'Delete group', action: () => deleteGroup(groupName), danger: true }
     ]);
 }
 
@@ -1124,10 +1124,10 @@ function showBmCtxMenu(event, groupName, idx) {
     const bm = appState.currentTab?.groups[groupName]?.bookmarks[idx];
     if (!bm) return;
     showCtxMenu(event.clientX, event.clientY, [
-        { icon: '🔗', label: 'Open link', action: `window.open(${JSON.stringify(bm.url)}, '_blank')` },
-        { icon: '📋', label: 'Copy URL', action: `navigator.clipboard.writeText(${JSON.stringify(bm.url)})` },
+        { icon: '🔗', label: 'Open link', action: () => window.open(bm.url, '_blank') },
+        { icon: '📋', label: 'Copy URL', action: () => navigator.clipboard.writeText(bm.url) },
         { sep: true },
-        { icon: '🗑️', label: 'Delete bookmark', action: `deleteBookmark(${JSON.stringify(groupName)}, ${idx})`, danger: true }
+        { icon: '🗑️', label: 'Delete bookmark', action: () => deleteBookmark(groupName, idx), danger: true }
     ]);
 }
 
@@ -1209,7 +1209,7 @@ function renderBookmarks() {
 function showBgContextMenu(event) {
     event.preventDefault();
     showCtxMenu(event.clientX, event.clientY, [
-        { icon: '📁', label: 'Add new group', action: "showAddGroupDialog()" }
+        { icon: '📁', label: 'Add new group', action: () => showAddGroupDialog() }
     ]);
 }
 window.showBgContextMenu = showBgContextMenu;
