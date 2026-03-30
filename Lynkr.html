@@ -4,1283 +4,1332 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lynkr Web - Bookmark Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #212121;
             color: #e0e0e0;
             height: 100vh;
             overflow: hidden;
         }
 
-        .app {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
+        .app { display: flex; flex-direction: column; height: 100vh; }
 
+        /* ── Header ── */
         .header {
-            background: #212121;
+            background: #1a1a1a;
             border-bottom: 1px solid #3a3a3d;
             padding: 8px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-shrink: 0;
         }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .logo { font-size: 22px; }
+        .app-title { font-weight: 700; font-size: 17px; color: #fff; }
 
-        .header-left {
+        .header-right { display: flex; align-items: center; gap: 8px; }
+
+        .account-btn {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3d;
+            border-radius: 6px;
+            color: #e0e0e0;
+            cursor: pointer;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.15s;
         }
-
-        .logo {
-            color: #5a8daa;
-            font-size: 24px;
+        .account-btn:hover { background: #353535; }
+        .account-btn .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #3d8b3d;
+            flex-shrink: 0;
         }
+        .account-btn .dot.offline { background: #666; }
 
-        .app-title {
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .header-buttons button {
+        .sync-btn {
             background: transparent;
             border: none;
-            color: #aaa;
+            color: #888;
             cursor: pointer;
-            padding: 8px;
+            padding: 7px;
             border-radius: 4px;
             font-size: 16px;
+            line-height: 1;
+            transition: color 0.15s, background 0.15s;
         }
+        .sync-btn:hover { background: #2a2a2a; color: #e0e0e0; }
+        .sync-btn.syncing { animation: spin 1s linear infinite; color: #5a8daa; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .header-buttons button:hover {
-            background: #404040;
-        }
+        /* ── Main layout ── */
+        .main-content { display: flex; flex: 1; overflow: hidden; }
 
-        .main-content {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
+        /* ── Sidebar ── */
         .sidebar {
             width: 220px;
             background: #1a1a1a;
             border-right: 1px solid #3a3a3d;
             display: flex;
             flex-direction: column;
+            flex-shrink: 0;
         }
-
-        .tabs-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-        }
-
+        .tabs-list { flex: 1; overflow-y: auto; padding: 10px 10px 0; }
         .tab-button {
             width: 100%;
             text-align: left;
-            padding: 12px 16px;
+            padding: 10px 14px;
             margin-bottom: 4px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             background: transparent;
             color: #aaa;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
+            font-size: 13px;
+            transition: all 0.15s;
         }
+        .tab-button:hover { background: #2a2a2a; color: #e0e0e0; }
+        .tab-button.active { color: white; font-weight: 600; }
 
-        .tab-button:hover {
-            background: #2a2a2a;
-        }
+        .sidebar-footer { padding: 10px; border-top: 1px solid #2a2a2a; margin-top: 4px; }
+        .sidebar-footer-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
 
-        .tab-button.active {
-            background: #2a4d6a;
-            color: white;
-        }
-
-        .sidebar-footer {
-            padding: 12px;
-        }
-
-        .import-export-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
+        /* ── Buttons ── */
         .btn {
-            padding: 10px 16px;
+            padding: 9px 14px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
             font-size: 13px;
             font-weight: 600;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
+        .btn-secondary { background: #2a2a2a; color: #e0e0e0; }
+        .btn-secondary:hover { background: #353535; }
+        .btn-primary { background: #2a4d6a; color: white; }
+        .btn-primary:hover { background: #3a6d8a; }
+        .btn-danger { background: #5a1a1a; color: #ff8080; }
+        .btn-danger:hover { background: #6e2020; }
 
-        .btn-secondary {
-            background: #2a2a2a;
-            color: #e0e0e0;
-        }
-
-        .btn-secondary:hover {
-            background: #353535;
-        }
-
-        .btn-primary {
-            background: #2a4d6a;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #3a6d8a;
-        }
-
-        .content-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
+        /* ── Content ── */
+        .content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .add-bookmark-bar {
             background: #1a1a1a;
             border-bottom: 1px solid #3a3a3d;
-            padding: 16px;
+            padding: 12px 16px;
+            flex-shrink: 0;
         }
-
-        .add-bookmark-form {
-            display: flex;
-            gap: 12px;
-        }
-
+        .add-bookmark-form { display: flex; gap: 10px; }
         .url-input {
             flex: 1;
-            padding: 10px 12px;
+            padding: 9px 12px;
             background: #2a2a2a;
             border: 1px solid #3a3a3d;
-            border-radius: 4px;
+            border-radius: 5px;
             color: white;
             font-size: 13px;
         }
+        .url-input:focus { outline: none; border-color: #5a8daa; }
 
-        .url-input:focus {
-            outline: none;
-            border-color: #5a8daa;
-            background: #353535;
-        }
+        .bookmarks-area { flex: 1; overflow-y: auto; padding: 20px; }
 
-        .bookmarks-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
-        }
-
-        .group-card {
-            margin-bottom: 16px;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
+        /* ── Groups ── */
+        .group-card { margin-bottom: 14px; border-radius: 5px; overflow: hidden; }
         .group-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            cursor: pointer;
-            user-select: none;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 11px 15px; cursor: pointer; user-select: none;
+            border-bottom: 1px solid rgba(0,0,0,0.2);
         }
+        .group-header-left { display: flex; align-items: center; gap: 8px; }
+        .group-title { font-weight: 600; font-size: 15px; color: white; }
+        .group-count { color: #ccc; font-size: 13px; }
+        .chevron { transition: transform 0.2s; font-size: 11px; }
+        .chevron.collapsed { transform: rotate(-90deg); }
+        .group-content { padding: 16px; }
 
-        .group-header-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .group-title {
-            font-weight: 600;
-            font-size: 16px;
-            color: white;
-        }
-
-        .group-count {
-            color: #ccc;
-            font-size: 14px;
-        }
-
-        .group-content {
-            padding: 20px;
-        }
-
+        /* ── Bookmark cards ── */
         .bookmark-card {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px;
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px;
             margin-bottom: 8px;
             border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: filter 0.15s;
+            border: 1px solid rgba(255,255,255,0.04);
         }
+        .bookmark-card:hover { filter: brightness(1.18); }
+        .bookmark-icon { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
+        .bookmark-info { flex: 1; min-width: 0; }
+        .bookmark-title { font-weight: 600; color: #e0e0e0; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+        .bookmark-url { font-size: 11px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .bookmark-card:hover {
-            filter: brightness(1.15);
-        }
+        .more-btn { background: transparent; border: none; color: #888; cursor: pointer; padding: 4px 6px; border-radius: 3px; font-size: 18px; line-height: 1; }
+        .more-btn:hover { background: rgba(255,255,255,0.1); color: white; }
 
-        .bookmark-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 4px;
-            object-fit: cover;
-        }
-
-        .bookmark-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .bookmark-title {
-            font-weight: 600;
-            color: #e0e0e0;
-            margin-bottom: 4px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .bookmark-url {
-            font-size: 12px;
-            color: #999;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
+        /* ── Context menu ── */
         .context-menu {
             position: fixed;
-            background: #2a2a2a;
+            background: #252525;
             border: 1px solid #3a3a3d;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            z-index: 1000;
-            min-width: 180px;
+            border-radius: 6px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+            z-index: 9000;
+            min-width: 190px;
             padding: 4px 0;
         }
-
-        .context-menu-item {
-            width: 100%;
-            padding: 10px 16px;
-            background: transparent;
-            border: none;
-            color: #e0e0e0;
-            text-align: left;
-            cursor: pointer;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .ctx-item {
+            width: 100%; padding: 9px 14px;
+            background: transparent; border: none;
+            color: #e0e0e0; text-align: left;
+            cursor: pointer; font-size: 13px;
+            display: flex; align-items: center; gap: 8px;
         }
+        .ctx-item:hover { background: #333; }
+        .ctx-item.danger { color: #ff7070; }
+        .ctx-item.danger:hover { background: rgba(232,17,35,0.15); }
+        .ctx-sep { border: none; border-top: 1px solid #3a3a3d; margin: 3px 0; }
 
-        .context-menu-item:hover {
-            background: #3a3a3a;
-        }
-
-        .context-menu-item.danger {
-            color: #e81123;
-        }
-
-        .context-menu-item.danger:hover {
-            background: rgba(232, 17, 35, 0.2);
-        }
-
+        /* ── Modal overlay ── */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10000;
         }
-
         .modal {
+            background: #1e1e1e;
+            border: 1px solid #3a3a3d;
+            border-radius: 10px;
+            width: 420px;
+            max-width: 95vw;
+            overflow: hidden;
+        }
+        .modal-header {
+            background: #161616;
+            padding: 16px 20px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .modal-header h3 { font-size: 15px; font-weight: 600; color: #e0e0e0; }
+        .modal-close {
+            background: transparent; border: none; color: #888;
+            cursor: pointer; font-size: 16px; padding: 4px 7px;
+            border-radius: 4px; line-height: 1;
+        }
+        .modal-close:hover { background: rgba(232,17,35,0.5); color: white; }
+        .modal-body { padding: 22px 24px; }
+
+        /* ── Auth modal ── */
+        .auth-tabs {
+            display: grid; grid-template-columns: 1fr 1fr;
             background: #2a2a2a;
-            border: 1px solid #3a3a3d;
-            border-radius: 8px;
-            padding: 24px;
-            width: 400px;
-            max-width: 90%;
+            border-radius: 6px;
+            padding: 4px;
+            margin-bottom: 22px;
         }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-
-        .modal-input {
-            width: 100%;
-            padding: 10px 12px;
-            background: #1a1a1a;
-            border: 1px solid #3a3a3d;
-            border-radius: 4px;
-            color: white;
-            font-size: 13px;
-            margin-bottom: 16px;
-        }
-
-        .modal-input:focus {
-            outline: none;
-            border-color: #5a8daa;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
-        .status-bar {
-            background: #1a1a1a;
-            border-top: 1px solid #3a3a3d;
-            padding: 4px 16px;
-            font-size: 11px;
-            color: #666;
-            text-align: right;
-        }
-
-        .chevron {
-            transition: transform 0.2s;
-        }
-
-        .chevron.collapsed {
-            transform: rotate(-90deg);
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .more-button {
-            background: transparent;
+        .auth-tab {
+            padding: 8px;
             border: none;
+            border-radius: 4px;
+            background: transparent;
             color: #aaa;
             cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            font-size: 18px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.15s;
         }
+        .auth-tab.active { background: #2a4d6a; color: white; font-weight: 600; }
 
-        .more-button:hover {
-            background: rgba(255,255,255,0.1);
+        .field-label { font-size: 12px; color: #aaa; margin-bottom: 6px; display: block; }
+        .field-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3d;
+            border-radius: 5px;
             color: white;
+            font-size: 13px;
+            margin-bottom: 14px;
+            caret-color: #5a8daa;
         }
+        .field-input:focus { outline: none; border-color: #5a8daa; }
 
-        input[type="file"] {
+        .auth-action-btn {
+            width: 100%;
+            padding: 11px;
+            background: #2a4d6a;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: background 0.15s;
+        }
+        .auth-action-btn:hover { background: #3a6d8a; }
+        .auth-action-btn:disabled { background: #1a2d3a; color: #555; cursor: not-allowed; }
+
+        .forgot-link {
+            display: block; text-align: right;
+            font-size: 11px; color: #5a8daa;
+            cursor: pointer; margin-top: -8px; margin-bottom: 16px;
+        }
+        .forgot-link:hover { color: #7aadc0; }
+
+        .alert-banner {
+            padding: 10px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            margin-bottom: 14px;
             display: none;
         }
+        .alert-error { background: #3d1a1a; border: 1px solid #8b2020; color: #ff8080; display: block; }
+        .alert-success { background: #1a3d1a; border: 1px solid #208b20; color: #80ff80; display: block; }
+
+        .auth-subtitle { font-size: 12px; color: #777; text-align: center; margin-bottom: 20px; line-height: 1.5; }
+
+        /* ── Signed-in dropdown ── */
+        .dropdown-menu {
+            position: fixed;
+            background: #252525;
+            border: 1px solid #3a3a3d;
+            border-radius: 6px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+            z-index: 9000;
+            min-width: 220px;
+            padding: 4px 0;
+        }
+        .dropdown-email {
+            padding: 10px 14px;
+            font-size: 12px;
+            color: #888;
+            border-bottom: 1px solid #3a3a3d;
+            margin-bottom: 4px;
+        }
+
+        /* ── Status bar ── */
+        .status-bar {
+            background: #1a1a1a;
+            border-top: 1px solid #2a2a2a;
+            padding: 4px 16px;
+            font-size: 11px;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .sync-status { color: #5a8daa; }
+
+        /* ── Group/Bookmark dialog ── */
+        .select-input {
+            width: 100%;
+            padding: 9px 12px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3d;
+            border-radius: 5px;
+            color: white;
+            font-size: 13px;
+            margin-bottom: 14px;
+            cursor: pointer;
+        }
+        .select-input:focus { outline: none; border-color: #5a8daa; }
+        .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
+        .hidden { display: none !important; }
+
+        input[type="file"] { display: none; }
+
+        /* ── Empty state ── */
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 100%;
+            color: #555; text-align: center; padding: 40px;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-state p { font-size: 14px; line-height: 1.6; }
     </style>
 </head>
 <body>
-    <div class="app">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-left">
-                <div class="logo">🔗</div>
-                <div class="app-title">Lynkr Web</div>
-            </div>
-            <div class="header-buttons">
-                <button onclick="toggleMaximize()" title="Maximize">⛶</button>
-            </div>
+<div class="app">
+
+    <!-- ── Header ── -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">🔗</div>
+            <div class="app-title">Lynkr</div>
         </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <div class="tabs-list" id="tabsList"></div>
-                <div class="sidebar-footer">
-                    <div class="import-export-buttons">
-                        <button class="btn btn-secondary" onclick="importTab()">📥 Import</button>
-                        <button class="btn btn-secondary" onclick="exportCurrentTab()">📤 Export</button>
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="showAddTabDialog()">+ New Tab</button>
-                </div>
-            </div>
-
-            <!-- Content Area -->
-            <div class="content-area">
-                <!-- Add Bookmark Bar -->
-                <div class="add-bookmark-bar">
-                    <div class="add-bookmark-form">
-                        <input 
-                            type="text" 
-                            id="urlInput" 
-                            class="url-input" 
-                            placeholder="Enter URL..."
-                            onkeypress="handleUrlKeyPress(event)"
-                        >
-                        <button class="btn btn-primary" onclick="addBookmark()">Add Bookmark</button>
-                    </div>
-                </div>
-
-                <!-- Bookmarks Area -->
-                <div class="bookmarks-area" id="bookmarksArea" oncontextmenu="showBackgroundContextMenu(event)"></div>
-
-                <!-- Status Bar -->
-                <div class="status-bar">Lynkr Web v1.0.0</div>
-            </div>
+        <div class="header-right">
+            <button class="sync-btn" id="syncBtn" title="Sync with cloud" onclick="manualSync()">⟳</button>
+            <button class="account-btn" id="accountBtn" onclick="handleAccountClick()">
+                <span class="dot offline" id="statusDot"></span>
+                <span id="accountLabel">☁ Sign In</span>
+            </button>
         </div>
     </div>
 
-    <input type="file" id="fileInput" accept="application/json,.json,.lynk,*/*" onchange="handleFileImport(event)">
+    <!-- ── Main ── -->
+    <div class="main-content">
 
-    <script>
-        // State
-        let appState = {
-            tabs: [],
-            currentTab: null,
-            backgroundColor: '#212121'
-        };
-
-        // Initialize
-        function init() {
-            loadFromStorage();
-            if (appState.tabs.length === 0) {
-                createTab('Default');
-            }
-            renderTabs();
-            renderBookmarks();
-            checkBackupReminder();
-        }
-
-        // Backup Reminder System
-        function checkBackupReminder() {
-            const lastBackup = localStorage.getItem('lynkr-last-backup');
-            const now = Date.now();
-            const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-            
-            if (!lastBackup || (now - parseInt(lastBackup)) > sevenDays) {
-                // Only show if user has bookmarks
-                const totalBookmarks = appState.tabs.reduce((sum, tab) => {
-                    return sum + Object.values(tab.groups || {}).reduce((gSum, group) => {
-                        return gSum + (group.bookmarks?.length || 0);
-                    }, 0);
-                }, 0);
-                
-                if (totalBookmarks > 0) {
-                    setTimeout(() => showBackupReminder(), 2000); // Show after 2 seconds
-                }
-            }
-        }
-
-        function showBackupReminder() {
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
-                <div class="modal" style="max-width: 450px;">
-                    <h3 class="modal-title">💾 Backup Reminder</h3>
-                    <p style="color: #ccc; margin-bottom: 16px; line-height: 1.5;">
-                        It's been a while since your last backup! Protect your ${getTotalBookmarksCount()} bookmarks by exporting them.
-                    </p>
-                    <p style="color: #999; font-size: 12px; margin-bottom: 20px;">
-                        💡 Tip: Bookmarks are saved in your browser, but can be lost if you clear cache or switch devices.
-                    </p>
-                    <div class="modal-buttons">
-                        <button class="btn btn-secondary" onclick="dismissBackupReminder(30)">
-                            Remind me in 30 days
-                        </button>
-                        <button class="btn btn-secondary" onclick="dismissBackupReminder(7)">
-                            Remind me in 7 days
-                        </button>
-                        <button class="btn btn-primary" onclick="backupNow()">
-                            📤 Backup Now
-                        </button>
-                    </div>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="tabs-list" id="tabsList"></div>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-btns">
+                    <button class="btn btn-secondary" onclick="importTab()">📥 Import</button>
+                    <button class="btn btn-secondary" onclick="exportCurrentTab()">📤 Export</button>
                 </div>
-            `;
-            document.body.appendChild(modal);
-            
-            // Close on background click
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    dismissBackupReminder(7);
-                }
-            });
-        }
+                <button class="btn btn-primary" style="width:100%" onclick="showAddTabDialog()">+ New Tab</button>
+            </div>
+        </div>
 
-        function dismissBackupReminder(days) {
-            const modal = document.querySelector('.modal-overlay');
-            if (modal) modal.remove();
-            
-            const now = Date.now();
-            const delayMs = days * 24 * 60 * 60 * 1000;
-            localStorage.setItem('lynkr-last-backup', (now + delayMs - (7 * 24 * 60 * 60 * 1000)).toString());
-        }
+        <!-- Content -->
+        <div class="content-area">
+            <div class="add-bookmark-bar">
+                <div class="add-bookmark-form">
+                    <input type="text" id="urlInput" class="url-input" placeholder="Paste or type a URL..."
+                        onkeydown="if(event.key==='Enter') addBookmark()">
+                    <button class="btn btn-primary" onclick="addBookmark()">Add Bookmark</button>
+                </div>
+            </div>
+            <div class="bookmarks-area" id="bookmarksArea" oncontextmenu="showBgContextMenu(event)"></div>
+            <div class="status-bar">
+                <span>Lynkr Web</span>
+                <span class="sync-status" id="syncStatusText"></span>
+            </div>
+        </div>
+    </div>
+</div>
 
-        function backupNow() {
-            const modal = document.querySelector('.modal-overlay');
-            if (modal) modal.remove();
-            
-            // Mark as backed up
-            localStorage.setItem('lynkr-last-backup', Date.now().toString());
-            
-            // Export all tabs automatically
-            exportAllTabs();
-        }
+<!-- hidden file input -->
+<input type="file" id="fileInput" accept=".lynk,.json,*/*" onchange="handleFileImport(event)">
 
-        function getTotalBookmarksCount() {
-            return appState.tabs.reduce((sum, tab) => {
-                return sum + Object.values(tab.groups || {}).reduce((gSum, group) => {
-                    return gSum + (group.bookmarks?.length || 0);
-                }, 0);
-            }, 0);
-        }
+<script>
+// ═══════════════════════════════════════════════════════
+// SUPABASE CONFIG — same project as the desktop app
+// ═══════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://nnybvwigofjmmvjxcyro.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ueWJ2d2lnb2ZqbW12anhjeXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDM3MTIsImV4cCI6MjA4OTkxOTcxMn0.ModLFpK_5FSI-chd51Hmh4Lk65YJ2yHYN5Gv2MUWpJ8';
 
-        function exportAllTabs() {
-            if (appState.tabs.length === 0) {
-                alert('No tabs to export!');
-                return;
-            }
-            
-            if (appState.tabs.length === 1) {
-                // Just export single file if only one tab
-                exportCurrentTab();
-                alert('✅ Backup complete! Your tab has been exported.');
-                return;
-            }
-            
-            // Create a ZIP file with all tabs
-            createZipBackup();
-        }
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-        async function createZipBackup() {
-            // Using JSZip library - we'll include it inline
-            // Simple ZIP implementation for browser
-            const files = {};
-            
-            appState.tabs.forEach(tab => {
-                const data = {
-                    Name: tab.name,
-                    TabColor: tab.tabColor,
-                    Groups: Object.entries(tab.groups).map(([name, group]) => ({
-                        Name: name,
-                        HeaderColor: group.headerColor,
-                        BackgroundColor: group.backgroundColor,
-                        IsCollapsed: group.isCollapsed,
-                        Order: group.order,
-                        Bookmarks: (group.bookmarks || []).map(b => ({
-                            Title: b.title,
-                            Url: b.url,
-                            ThumbnailUrl: b.thumbnailUrl,
-                            DateAdded: b.dateAdded,
-                            BackgroundColor: b.backgroundColor
-                        }))
-                    })),
-                    name: tab.name,
-                    tabColor: tab.tabColor,
-                    groups: Object.entries(tab.groups).map(([name, group]) => ({
-                        name,
-                        headerColor: group.headerColor,
-                        backgroundColor: group.backgroundColor,
-                        isCollapsed: group.isCollapsed,
-                        order: group.order,
-                        bookmarks: group.bookmarks
-                    }))
-                };
-                
-                files[`${tab.name}.lynk`] = JSON.stringify(data, null, 2);
-            });
-            
-            // Simple approach: Create a single JSON file with all tabs
-            // This is easier than implementing full ZIP in browser
-            const backupData = {
-                exportDate: new Date().toISOString(),
-                version: '1.0.0',
-                tabs: appState.tabs.map(tab => ({
-                    Name: tab.name,
-                    TabColor: tab.tabColor,
-                    Groups: Object.entries(tab.groups).map(([name, group]) => ({
-                        Name: name,
-                        HeaderColor: group.headerColor,
-                        BackgroundColor: group.backgroundColor,
-                        IsCollapsed: group.isCollapsed,
-                        Order: group.order,
-                        Bookmarks: (group.bookmarks || []).map(b => ({
-                            Title: b.title,
-                            Url: b.url,
-                            ThumbnailUrl: b.thumbnailUrl,
-                            DateAdded: b.dateAdded,
-                            BackgroundColor: b.backgroundColor
-                        }))
-                    }))
-                }))
-            };
-            
-            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            const dateStr = new Date().toISOString().split('T')[0];
-            a.download = `Lynkr-Backup-${dateStr}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            alert(`✅ Backup complete!\n\nExported ${appState.tabs.length} tabs to a single backup file.\n\nYou can import this file to restore all tabs at once.`);
-        }
+// ═══════════════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════════════
+let appState = { tabs: [], currentTab: null, backgroundColor: '#212121' };
+let currentUser = null;
+let isSyncing = false;
 
-        // Storage
-        function saveToStorage() {
-            const data = {
-                backgroundColor: appState.backgroundColor,
-                currentTab: appState.currentTab?.name,
-                tabs: appState.tabs.map(tab => ({
-                    name: tab.name,
-                    tabColor: tab.tabColor || '#2A4D6A',
-                    groups: Object.entries(tab.groups || {}).map(([name, group]) => ({
-                        name,
-                        headerColor: group.headerColor || '#2A2A2A',
-                        backgroundColor: group.backgroundColor || '#1A1A1A',
-                        isCollapsed: group.isCollapsed || false,
-                        order: group.order || 0,
-                        bookmarks: (group.bookmarks || []).map(b => ({
-                            title: b.title,
-                            url: b.url,
-                            thumbnailUrl: b.thumbnailUrl,
-                            dateAdded: b.dateAdded,
-                            backgroundColor: b.backgroundColor || '#252525'
-                        }))
-                    }))
-                }))
-            };
-            localStorage.setItem('lynkr-data', JSON.stringify(data));
-        }
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+async function init() {
+    loadFromLocalStorage();
+    if (appState.tabs.length === 0) createTab('Default');
+    renderTabs();
+    renderBookmarks();
 
-        function loadFromStorage() {
-            const saved = localStorage.getItem('lynkr-data');
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    if (data.backgroundColor) appState.backgroundColor = data.backgroundColor;
-                    
-                    if (data.tabs && data.tabs.length > 0) {
-                        appState.tabs = data.tabs.map(tabData => ({
-                            name: tabData.name,
-                            tabColor: tabData.tabColor || '#2A4D6A',
-                            groups: (tabData.groups || []).reduce((acc, group) => {
-                                acc[group.name] = {
-                                    headerColor: group.headerColor || '#2A2A2A',
-                                    backgroundColor: group.backgroundColor || '#1A1A1A',
-                                    isCollapsed: group.isCollapsed || false,
-                                    order: group.order || 0,
-                                    bookmarks: group.bookmarks || []
-                                };
-                                return acc;
-                            }, {})
-                        }));
-                        
-                        appState.currentTab = appState.tabs.find(t => t.name === data.currentTab) || appState.tabs[0];
-                    }
-                } catch (e) {
-                    console.error('Failed to load data:', e);
-                }
-            }
-        }
+    // Restore Supabase session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+        currentUser = session.user;
+        updateAccountUI();
+        await pullFromCloud();
+    }
 
-        // Tabs
-        function createTab(name) {
-            if (!name || appState.tabs.some(t => t.name === name)) return;
-            
-            const tab = {
-                name,
-                tabColor: '#2A4D6A',
-                groups: {}
-            };
-            
-            appState.tabs.push(tab);
-            appState.currentTab = tab;
-            saveToStorage();
-            renderTabs();
-            renderBookmarks();
-        }
+    // Listen for auth changes (e.g. token refresh)
+    supabase.auth.onAuthStateChange((_event, session) => {
+        currentUser = session?.user ?? null;
+        updateAccountUI();
+    });
+}
 
-        function switchTab(tab) {
-            appState.currentTab = tab;
-            saveToStorage();
-            renderTabs();
-            renderBookmarks();
-        }
+// ═══════════════════════════════════════════════════════
+// AUTH UI
+// ═══════════════════════════════════════════════════════
+function updateAccountUI() {
+    const dot = document.getElementById('statusDot');
+    const label = document.getElementById('accountLabel');
+    if (currentUser) {
+        dot.classList.remove('offline');
+        label.textContent = '☁ ' + (currentUser.email?.split('@')[0] || 'Account');
+    } else {
+        dot.classList.add('offline');
+        label.textContent = '☁ Sign In';
+    }
+}
 
-        function deleteTab(tab) {
-            if (!confirm(`Delete tab "${tab.name}"?`)) return;
-            
-            appState.tabs = appState.tabs.filter(t => t.name !== tab.name);
-            
-            if (appState.currentTab.name === tab.name) {
-                appState.currentTab = appState.tabs[0] || null;
-            }
-            
-            saveToStorage();
-            renderTabs();
-            renderBookmarks();
-        }
+function handleAccountClick() {
+    if (currentUser) {
+        showAccountDropdown();
+    } else {
+        showAuthModal();
+    }
+}
 
-        function renderTabs() {
-            const container = document.getElementById('tabsList');
-            container.innerHTML = appState.tabs.map(tab => `
-                <button 
-                    class="tab-button ${appState.currentTab?.name === tab.name ? 'active' : ''}"
-                    style="${appState.currentTab?.name === tab.name ? `background-color: ${tab.tabColor}; color: white;` : ''}"
-                    onclick="switchTab(${JSON.stringify(tab).replace(/"/g, '&quot;')})"
-                    oncontextmenu="showTabContextMenu(event, ${JSON.stringify(tab).replace(/"/g, '&quot;')})"
-                >
-                    ${tab.name}
+function showAccountDropdown() {
+    closeAllOverlays();
+    const btn = document.getElementById('accountBtn');
+    const rect = btn.getBoundingClientRect();
+
+    const menu = document.createElement('div');
+    menu.className = 'dropdown-menu';
+    menu.id = 'accountDropdown';
+    menu.style.top = (rect.bottom + 6) + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+
+    menu.innerHTML = `
+        <div class="dropdown-email">✉ ${currentUser.email}</div>
+        <button class="ctx-item" onclick="manualSync(); closeAllOverlays()">⟳ &nbsp;Sync now</button>
+        <hr class="ctx-sep">
+        <button class="ctx-item danger" onclick="signOut()">🚪 &nbsp;Sign out</button>
+    `;
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', closeAllOverlays, { once: true }), 0);
+}
+
+function showAuthModal() {
+    closeAllOverlays();
+    let mode = 'signin'; // 'signin' | 'signup' | 'reset'
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'authModal';
+
+    function render() {
+        const isSignIn = mode === 'signin';
+        const isSignUp = mode === 'signup';
+        overlay.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Lynkr Account</h3>
+                <button class="modal-close" onclick="closeAllOverlays()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab ${isSignIn ? 'active' : ''}" onclick="authSetMode('signin')">Sign In</button>
+                    <button class="auth-tab ${isSignUp ? 'active' : ''}" onclick="authSetMode('signup')">Create Account</button>
+                </div>
+                <p class="auth-subtitle">
+                    ${isSignIn
+                        ? 'Sign in to sync your bookmarks across devices'
+                        : 'Create a free account to back up and sync your bookmarks'}
+                </p>
+
+                <div id="authAlert" class="alert-banner"></div>
+
+                <label class="field-label">Email</label>
+                <input class="field-input" type="email" id="authEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter') authSubmit()">
+
+                ${mode !== 'reset' ? `
+                <label class="field-label">Password</label>
+                <input class="field-input" type="password" id="authPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter') authSubmit()">
+                ${isSignIn ? `<span class="forgot-link" onclick="authSetMode('reset')">Forgot password?</span>` : ''}
+                ` : `
+                <p style="font-size:13px;color:#aaa;margin-bottom:16px">Enter your email to receive a password reset link.</p>
+                `}
+
+                <button class="auth-action-btn" id="authSubmitBtn" onclick="authSubmit()">
+                    ${isSignIn ? 'Sign In' : isSignUp ? 'Create Account' : 'Send Reset Email'}
                 </button>
-            `).join('');
-        }
+            </div>
+        </div>`;
+        // focus email
+        setTimeout(() => document.getElementById('authEmail')?.focus(), 50);
+    }
 
-        // Groups
-        function createGroup(name) {
-            if (!name || !appState.currentTab) return;
-            
-            appState.currentTab.groups[name] = {
-                bookmarks: [],
-                isCollapsed: false,
-                order: Object.keys(appState.currentTab.groups).length,
-                headerColor: '#2A2A2A',
-                backgroundColor: '#1A1A1A'
-            };
-            
-            saveToStorage();
-            renderBookmarks();
-        }
+    window.authSetMode = (m) => { mode = m; render(); };
 
-        function deleteGroup(groupName) {
-            if (!confirm(`Delete group "${groupName}" and all its bookmarks?`)) return;
-            
-            delete appState.currentTab.groups[groupName];
-            saveToStorage();
-            renderBookmarks();
-        }
+    window.authSubmit = async () => {
+        const email = document.getElementById('authEmail')?.value.trim();
+        const password = document.getElementById('authPassword')?.value;
+        const btn = document.getElementById('authSubmitBtn');
+        const alert = document.getElementById('authAlert');
 
-        function toggleGroupCollapse(groupName) {
-            const group = appState.currentTab.groups[groupName];
-            group.isCollapsed = !group.isCollapsed;
-            saveToStorage();
-            renderBookmarks();
-        }
+        if (!email) return showAuthAlert('Please enter your email.', 'error');
 
-        // Bookmarks
-        function getFaviconUrl(url) {
-            try {
-                const domain = new URL(url).hostname;
-                return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-            } catch {
-                return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"%3E%3Cpath d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/%3E%3C/svg%3E';
-            }
-        }
+        btn.disabled = true;
+        btn.textContent = 'Please wait…';
+        alert.className = 'alert-banner';
 
-        function getPageTitle(url) {
-            try {
-                const domain = new URL(url).hostname.replace('www.', '');
-                return domain.charAt(0).toUpperCase() + domain.slice(1);
-            } catch {
-                return 'Bookmark';
-            }
-        }
+        try {
+            if (mode === 'signin') {
+                if (!password) { showAuthAlert('Please enter your password.', 'error'); btn.disabled = false; btn.textContent = 'Sign In'; return; }
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                const { data: { session } } = await supabase.auth.getSession();
+                currentUser = session?.user ?? null;
+                updateAccountUI();
+                closeAllOverlays();
+                setSyncStatus('Signed in — syncing…');
+                await pullFromCloud();
 
-        function addBookmark() {
-            const input = document.getElementById('urlInput');
-            let url = input.value.trim();
-            
-            if (!url || !appState.currentTab) return;
-            
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                url = 'https://' + url;
-            }
-
-            // Show group selection dialog
-            showGroupSelectionDialog(url);
-        }
-
-        function showGroupSelectionDialog(url) {
-            const groups = Object.keys(appState.currentTab.groups);
-            
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
-                <div class="modal">
-                    <h3 class="modal-title">Add Bookmark</h3>
-                    <p style="color: #999; font-size: 13px; margin-bottom: 16px;">Select or create a group:</p>
-                    <select id="groupSelect" class="modal-input" style="cursor: pointer;">
-                        ${groups.length > 0 ? groups.map(g => `<option value="${g}">${g}</option>`).join('') : ''}
-                        <option value="__new__">+ Create New Group</option>
-                    </select>
-                    <input 
-                        type="text" 
-                        id="newGroupName" 
-                        class="modal-input hidden" 
-                        placeholder="New group name..."
-                    >
-                    <div class="modal-buttons">
-                        <button class="btn btn-secondary" onclick="closeGroupDialog()">Cancel</button>
-                        <button class="btn btn-primary" onclick="confirmAddBookmark('${url.replace(/'/g, "\\'")}')">Add</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            // Handle group selection change
-            const select = document.getElementById('groupSelect');
-            const newGroupInput = document.getElementById('newGroupName');
-            
-            select.addEventListener('change', () => {
-                if (select.value === '__new__') {
-                    newGroupInput.classList.remove('hidden');
-                    newGroupInput.focus();
+            } else if (mode === 'signup') {
+                if (!password) { showAuthAlert('Please enter a password.', 'error'); btn.disabled = false; btn.textContent = 'Create Account'; return; }
+                if (password.length < 6) { showAuthAlert('Password must be at least 6 characters.', 'error'); btn.disabled = false; btn.textContent = 'Create Account'; return; }
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if (error) throw error;
+                if (data?.session) {
+                    currentUser = data.session.user;
+                    updateAccountUI();
+                    closeAllOverlays();
+                    await pushToCloud();
                 } else {
-                    newGroupInput.classList.add('hidden');
+                    showAuthAlert('Account created! Check your email to confirm, then sign in.', 'success');
+                    authSetMode('signin');
                 }
-            });
-            
-            // Close on background click
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeGroupDialog();
-                }
-            });
-            
-            // Focus select
-            select.focus();
+
+            } else if (mode === 'reset') {
+                const { error } = await supabase.auth.resetPasswordForEmail(email);
+                if (error) throw error;
+                showAuthAlert('Password reset email sent! Check your inbox.', 'success');
+            }
+        } catch (err) {
+            showAuthAlert(cleanAuthError(err.message), 'error');
         }
 
-        function closeGroupDialog() {
-            const modal = document.querySelector('.modal-overlay');
-            if (modal) modal.remove();
-        }
+        btn.disabled = false;
+        btn.textContent = mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Email';
+    };
 
-        async function confirmAddBookmark(url) {
-            const select = document.getElementById('groupSelect');
-            const newGroupInput = document.getElementById('newGroupName');
-            
-            let groupName;
-            
-            if (select.value === '__new__') {
-                groupName = newGroupInput.value.trim();
-                if (!groupName) {
-                    alert('Please enter a group name');
-                    return;
+    function showAuthAlert(msg, type) {
+        const el = document.getElementById('authAlert');
+        if (!el) return;
+        el.textContent = msg;
+        el.className = 'alert-banner alert-' + type;
+    }
+
+    document.body.appendChild(overlay);
+    render();
+
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeAllOverlays(); });
+}
+
+function cleanAuthError(msg) {
+    if (msg.includes('Invalid login credentials')) return 'Invalid email or password.';
+    if (msg.includes('User already registered')) return 'An account with this email already exists.';
+    if (msg.includes('Password should be at least')) return 'Password must be at least 6 characters.';
+    if (msg.includes('Unable to validate email')) return 'Please enter a valid email address.';
+    return msg;
+}
+
+async function signOut() {
+    closeAllOverlays();
+    await supabase.auth.signOut();
+    currentUser = null;
+    updateAccountUI();
+    setSyncStatus('Signed out');
+}
+
+// ═══════════════════════════════════════════════════════
+// CLOUD SYNC — same table as desktop: lynkr_bookmarks
+// ═══════════════════════════════════════════════════════
+async function pushToCloud() {
+    if (!currentUser) return;
+    isSyncing = true;
+    setSyncStatus('Syncing…');
+    const syncBtn = document.getElementById('syncBtn');
+    syncBtn.classList.add('syncing');
+
+    try {
+        const saveDataJson = buildSaveDataJson();
+        const { error } = await supabase
+            .from('lynkr_bookmarks')
+            .upsert({ id: currentUser.id, user_id: currentUser.id, data: saveDataJson });
+        if (error) throw error;
+        setSyncStatus('Synced ' + fmtTime());
+    } catch (e) {
+        setSyncStatus('Sync failed');
+        console.error('[Lynkr] push failed:', e.message);
+    } finally {
+        isSyncing = false;
+        syncBtn.classList.remove('syncing');
+    }
+}
+
+async function pullFromCloud() {
+    if (!currentUser) return;
+    isSyncing = true;
+    setSyncStatus('Checking cloud…');
+    const syncBtn = document.getElementById('syncBtn');
+    syncBtn.classList.add('syncing');
+
+    try {
+        const { data, error } = await supabase
+            .from('lynkr_bookmarks')
+            .select('data, updated_at')
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (data?.data) {
+            const cloudUpdated = new Date(data.updated_at);
+            const localSavedStr = localStorage.getItem('lynkr-last-save-time');
+            const localUpdated = localSavedStr ? new Date(localSavedStr) : new Date(0);
+
+            if (cloudUpdated > localUpdated) {
+                // Cloud is newer — load it
+                const parsed = parseDesktopSaveData(data.data);
+                if (parsed) {
+                    appState = parsed;
+                    if (!appState.currentTab && appState.tabs.length > 0) {
+                        appState.currentTab = appState.tabs[0];
+                    }
+                    saveToLocalStorage();
+                    renderTabs();
+                    renderBookmarks();
+                    setSyncStatus('Loaded from cloud ' + fmtTime());
+                } else {
+                    setSyncStatus('Cloud data unreadable');
                 }
-                // Create the new group if it doesn't exist
-                if (!appState.currentTab.groups[groupName]) {
-                    appState.currentTab.groups[groupName] = {
-                        bookmarks: [],
-                        isCollapsed: false,
-                        order: Object.keys(appState.currentTab.groups).length,
-                        headerColor: '#2A2A2A',
-                        backgroundColor: '#1A1A1A'
-                    };
-                }
+            } else if (localUpdated > cloudUpdated) {
+                // Local is newer — push it
+                await pushToCloud();
             } else {
-                groupName = select.value;
+                setSyncStatus('Up to date ' + fmtTime());
             }
-            
-            // If no groups exist and user didn't create one, create default
-            if (!groupName && Object.keys(appState.currentTab.groups).length === 0) {
-                groupName = 'Bookmarks';
-                appState.currentTab.groups[groupName] = {
-                    bookmarks: [],
-                    isCollapsed: false,
-                    order: 0,
-                    headerColor: '#2A2A2A',
-                    backgroundColor: '#1A1A1A'
-                };
-            }
+        } else {
+            // No cloud data yet — push local
+            await pushToCloud();
+        }
+    } catch (e) {
+        setSyncStatus('Sync failed');
+        console.error('[Lynkr] pull failed:', e.message);
+    } finally {
+        isSyncing = false;
+        syncBtn.classList.remove('syncing');
+    }
+}
 
-            const title = getPageTitle(url);
-            const thumbnailUrl = getFaviconUrl(url);
-            
-            appState.currentTab.groups[groupName].bookmarks.push({
-                title,
-                url,
-                thumbnailUrl,
-                dateAdded: new Date().toISOString(),
-                backgroundColor: '#252525'
+async function manualSync() {
+    if (!currentUser) { showAuthModal(); return; }
+    await pullFromCloud();
+}
+
+// Build JSON in the SAME format the C# desktop app uses (PascalCase SaveData)
+function buildSaveDataJson() {
+    const standaloneTabs = appState.tabs.filter(t => !t.parentContainer);
+
+    const data = {
+        BackgroundColor: appState.backgroundColor || '#212121',
+        CurrentTab: appState.currentTab?.name || '',
+        TabContainers: [],
+        Tabs: standaloneTabs.map(tabToTabData)
+    };
+
+    return JSON.stringify(data, null, 2);
+}
+
+function tabToTabData(tab) {
+    return {
+        Name: tab.name,
+        TabColor: tab.tabColor || '#2A4D6A',
+        Groups: sortedGroups(tab.groups).map(groupToGroupData)
+    };
+}
+
+function groupToGroupData(group) {
+    return {
+        Name: group.name,
+        PositionX: group.positionX || 20,
+        PositionY: group.positionY || 20,
+        IsCollapsed: group.isCollapsed || false,
+        Order: group.order || 0,
+        HeaderColor: group.headerColor || '#2A2A2A',
+        BackgroundColor: group.backgroundColor || '#1A1A1A',
+        Level: group.level || 0,
+        Bookmarks: (group.bookmarks || []).map(b => ({
+            Title: b.title,
+            Url: b.url,
+            ThumbnailUrl: b.thumbnailUrl,
+            DateAdded: b.dateAdded,
+            BackgroundColor: b.backgroundColor || '#252525'
+        })),
+        ChildGroups: []
+    };
+}
+
+function sortedGroups(groupsObj) {
+    return Object.entries(groupsObj || {})
+        .map(([name, g]) => ({ name, ...g }))
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+}
+
+// Parse desktop SaveData JSON into web appState
+function parseDesktopSaveData(jsonStr) {
+    try {
+        const raw = JSON.parse(jsonStr);
+
+        // Support both desktop format (PascalCase) and web format (camelCase)
+        const tabs = [];
+
+        // Desktop standalone tabs
+        const rawTabs = raw.Tabs || raw.tabs || [];
+        rawTabs.forEach(td => {
+            tabs.push(parseTabData(td));
+        });
+
+        // Desktop container tabs — flatten into tabs (web doesn't have containers yet)
+        const rawContainers = raw.TabContainers || raw.tabContainers || [];
+        rawContainers.forEach(c => {
+            (c.Tabs || c.tabs || []).forEach(td => {
+                tabs.push(parseTabData(td));
             });
-            
-            // Update tabs array to persist changes
-            const tabIndex = appState.tabs.findIndex(t => t.name === appState.currentTab.name);
-            if (tabIndex !== -1) {
-                appState.tabs[tabIndex] = appState.currentTab;
+        });
+
+        const bgColor = raw.BackgroundColor || raw.backgroundColor || '#212121';
+        const currentTabName = raw.CurrentTab || raw.currentTab || '';
+
+        const currentTab = tabs.find(t => t.name === currentTabName) || tabs[0] || null;
+
+        return { tabs, currentTab, backgroundColor: bgColor };
+    } catch (e) {
+        console.error('[Lynkr] parseDesktopSaveData failed:', e);
+        return null;
+    }
+}
+
+function parseTabData(td) {
+    const name = td.Name || td.name || 'Tab';
+    const tabColor = td.TabColor || td.tabColor || '#2A4D6A';
+    const rawGroups = td.Groups || td.groups || [];
+    const groups = {};
+    rawGroups.forEach((gd, idx) => {
+        const gName = gd.Name || gd.name || `Group ${idx+1}`;
+        groups[gName] = {
+            headerColor: gd.HeaderColor || gd.headerColor || '#2A2A2A',
+            backgroundColor: gd.BackgroundColor || gd.backgroundColor || '#1A1A1A',
+            isCollapsed: gd.IsCollapsed ?? gd.isCollapsed ?? false,
+            order: gd.Order ?? gd.order ?? idx,
+            positionX: gd.PositionX ?? gd.positionX ?? 20,
+            positionY: gd.PositionY ?? gd.positionY ?? 20,
+            level: gd.Level ?? gd.level ?? 0,
+            bookmarks: (gd.Bookmarks || gd.bookmarks || []).map(b => ({
+                title: b.Title || b.title || 'Untitled',
+                url: b.Url || b.url || '',
+                thumbnailUrl: b.ThumbnailUrl || b.thumbnailUrl || '',
+                dateAdded: b.DateAdded || b.dateAdded || new Date().toISOString(),
+                backgroundColor: b.BackgroundColor || b.backgroundColor || '#252525'
+            }))
+        };
+    });
+    return { name, tabColor, groups };
+}
+
+// ═══════════════════════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════════════════════
+function saveToLocalStorage() {
+    localStorage.setItem('lynkr-data', JSON.stringify(appState));
+    localStorage.setItem('lynkr-last-save-time', new Date().toISOString());
+}
+
+function loadFromLocalStorage() {
+    try {
+        const raw = localStorage.getItem('lynkr-data');
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            // Handle both direct format and desktop format
+            if (parsed.tabs) {
+                appState = parsed;
+                if (!appState.currentTab && appState.tabs.length > 0) {
+                    appState.currentTab = appState.tabs[0];
+                }
+            } else if (parsed.Tabs || parsed.TabContainers) {
+                const p = parseDesktopSaveData(raw);
+                if (p) appState = p;
             }
-            
-            document.getElementById('urlInput').value = '';
-            closeGroupDialog();
-            saveToStorage();
-            renderBookmarks();
         }
+    } catch (e) { console.error('[Lynkr] loadFromLocalStorage:', e); }
+}
 
-        function deleteBookmark(groupName, bookmarkIndex) {
-            appState.currentTab.groups[groupName].bookmarks.splice(bookmarkIndex, 1);
-            saveToStorage();
-            renderBookmarks();
-        }
+function saveAndSync() {
+    saveToLocalStorage();
+    if (currentUser) pushToCloud();
+}
 
-        function handleUrlKeyPress(event) {
-            if (event.key === 'Enter') {
-                addBookmark();
-            }
-        }
+// ═══════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════
+function createTab(name) {
+    if (!name || appState.tabs.some(t => t.name === name)) return;
+    const tab = { name, tabColor: '#2A4D6A', groups: {} };
+    appState.tabs.push(tab);
+    appState.currentTab = tab;
+    saveAndSync();
+    renderTabs();
+    renderBookmarks();
+}
 
-        function renderBookmarks() {
-            const container = document.getElementById('bookmarksArea');
-            container.style.backgroundColor = appState.backgroundColor;
-            
-            if (!appState.currentTab) {
-                container.innerHTML = '';
-                return;
-            }
+function switchTab(tabName) {
+    const tab = appState.tabs.find(t => t.name === tabName);
+    if (!tab) return;
+    appState.currentTab = tab;
+    saveToLocalStorage();
+    renderTabs();
+    renderBookmarks();
+}
 
-            const groups = Object.entries(appState.currentTab.groups)
-                .sort(([, a], [, b]) => (a.order || 0) - (b.order || 0));
+function renderTabs() {
+    const container = document.getElementById('tabsList');
+    container.innerHTML = appState.tabs.map(tab => {
+        const isActive = appState.currentTab?.name === tab.name;
+        const style = isActive ? `background-color:${tab.tabColor};color:white;` : '';
+        return `<button class="tab-button${isActive ? ' active' : ''}" style="${style}"
+            onclick="switchTab(${JSON.stringify(tab.name)})"
+            oncontextmenu="showTabCtxMenu(event, ${JSON.stringify(tab.name)})"
+        >${tab.name}</button>`;
+    }).join('');
+}
 
-            container.innerHTML = groups.map(([groupName, group]) => `
-                <div class="group-card">
-                    <div class="group-header" style="background-color: ${group.headerColor}; border-bottom: 1px solid #3a3a3d;">
-                        <div class="group-header-left" onclick="toggleGroupCollapse('${groupName}')">
-                            <span class="chevron ${group.isCollapsed ? 'collapsed' : ''}">▼</span>
-                            <span class="group-title">${groupName}</span>
-                            <span class="group-count">(${group.bookmarks?.length || 0})</span>
-                        </div>
-                        <button class="more-button" onclick="showGroupContextMenu(event, '${groupName}')">⋮</button>
-                    </div>
-                    <div class="group-content ${group.isCollapsed ? 'hidden' : ''}" style="background-color: ${group.backgroundColor};">
-                        ${(group.bookmarks || []).map((bookmark, idx) => `
-                            <div 
-                                class="bookmark-card" 
-                                style="background-color: ${bookmark.backgroundColor};"
-                                ondblclick="window.open('${bookmark.url}', '_blank')"
-                                oncontextmenu="showBookmarkContextMenu(event, '${groupName}', ${idx})"
-                            >
-                                <img src="${bookmark.thumbnailUrl}" class="bookmark-icon" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22%3E%3Cpath d=%22M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71%22/%3E%3C/svg%3E'">
-                                <div class="bookmark-info">
-                                    <div class="bookmark-title">${bookmark.title}</div>
-                                    <div class="bookmark-url">${bookmark.url}</div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
+function showAddTabDialog() {
+    const name = prompt('Tab name:');
+    if (name?.trim()) createTab(name.trim());
+}
+
+function showTabCtxMenu(event, tabName) {
+    event.preventDefault();
+    event.stopPropagation();
+    showCtxMenu(event.clientX, event.clientY, [
+        { icon: '📤', label: 'Export tab', action: `exportTabByName(${JSON.stringify(tabName)})` },
+        { icon: '✏️', label: 'Rename tab', action: `renameTab(${JSON.stringify(tabName)})` },
+        { sep: true },
+        { icon: '🗑️', label: 'Delete tab', action: `deleteTab(${JSON.stringify(tabName)})`, danger: true }
+    ]);
+}
+
+function renameTab(tabName) {
+    const tab = appState.tabs.find(t => t.name === tabName);
+    if (!tab) return;
+    const newName = prompt('New tab name:', tabName);
+    if (!newName?.trim() || newName === tabName) return;
+    if (appState.tabs.some(t => t.name === newName)) { alert('A tab with that name already exists.'); return; }
+    const wasActive = appState.currentTab?.name === tabName;
+    tab.name = newName;
+    if (wasActive) appState.currentTab = tab;
+    saveAndSync();
+    renderTabs();
+    renderBookmarks();
+}
+
+function deleteTab(tabName) {
+    if (!confirm(`Delete tab "${tabName}"?`)) return;
+    appState.tabs = appState.tabs.filter(t => t.name !== tabName);
+    if (appState.currentTab?.name === tabName) {
+        appState.currentTab = appState.tabs[0] || null;
+    }
+    saveAndSync();
+    renderTabs();
+    renderBookmarks();
+}
+
+// ═══════════════════════════════════════════════════════
+// GROUPS
+// ═══════════════════════════════════════════════════════
+function createGroup(name) {
+    if (!name || !appState.currentTab) return;
+    if (appState.currentTab.groups[name]) return;
+    appState.currentTab.groups[name] = {
+        bookmarks: [], isCollapsed: false,
+        order: Object.keys(appState.currentTab.groups).length,
+        headerColor: '#2A2A2A', backgroundColor: '#1A1A1A',
+        positionX: 20, positionY: 20, level: 0
+    };
+    saveAndSync();
+    renderBookmarks();
+}
+
+function toggleGroup(name) {
+    const g = appState.currentTab?.groups[name];
+    if (!g) return;
+    g.isCollapsed = !g.isCollapsed;
+    saveToLocalStorage();
+    renderBookmarks();
+}
+
+function deleteGroup(name) {
+    if (!confirm(`Delete group "${name}" and all its bookmarks?`)) return;
+    delete appState.currentTab.groups[name];
+    saveAndSync();
+    renderBookmarks();
+}
+
+function showGroupCtxMenu(event, groupName) {
+    event.preventDefault();
+    event.stopPropagation();
+    showCtxMenu(event.clientX, event.clientY, [
+        { icon: '➕', label: 'Add bookmark', action: `showAddBmDialog(${JSON.stringify(groupName)})` },
+        { sep: true },
+        { icon: '🗑️', label: 'Delete group', action: `deleteGroup(${JSON.stringify(groupName)})`, danger: true }
+    ]);
+}
+
+// ═══════════════════════════════════════════════════════
+// BOOKMARKS
+// ═══════════════════════════════════════════════════════
+function getFaviconUrl(url) {
+    try {
+        const domain = new URL(url).hostname;
+        return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    } catch { return ''; }
+}
+
+function getPageTitle(url) {
+    try {
+        return new URL(url).hostname.replace('www.', '').split('.')[0];
+    } catch { return 'Bookmark'; }
+}
+
+function addBookmark() {
+    const input = document.getElementById('urlInput');
+    let url = input.value.trim();
+    if (!url || !appState.currentTab) return;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+    showGroupSelectDialog(url, () => { input.value = ''; });
+}
+
+function showGroupSelectDialog(url, onDone) {
+    const groups = Object.keys(appState.currentTab?.groups || {});
+    const overlay = mkOverlay('addBmModal');
+
+    overlay.innerHTML = `
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Add Bookmark</h3>
+            <button class="modal-close" onclick="closeModal('addBmModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <label class="field-label">Group</label>
+            <select class="select-input" id="groupSel" onchange="handleGroupSelChange()">
+                ${groups.map(g => `<option value="${g}">${g}</option>`).join('')}
+                <option value="__new__">+ Create new group…</option>
+            </select>
+            <input class="field-input hidden" id="newGroupInput" placeholder="New group name…">
+            <div class="modal-btns">
+                <button class="btn btn-secondary" onclick="closeModal('addBmModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmAddBm(${JSON.stringify(url)})">Add</button>
+            </div>
+        </div>
+    </div>`;
+
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('addBmModal'); });
+
+    if (onDone) overlay._onDone = onDone;
+}
+
+window.handleGroupSelChange = () => {
+    const sel = document.getElementById('groupSel');
+    const inp = document.getElementById('newGroupInput');
+    if (!sel || !inp) return;
+    inp.classList.toggle('hidden', sel.value !== '__new__');
+    if (sel.value === '__new__') inp.focus();
+};
+
+window.confirmAddBm = (url) => {
+    const sel = document.getElementById('groupSel');
+    const newInp = document.getElementById('newGroupInput');
+    let groupName;
+    if (sel?.value === '__new__') {
+        groupName = newInp?.value.trim();
+        if (!groupName) { alert('Enter a group name.'); return; }
+        if (!appState.currentTab.groups[groupName]) createGroupObj(groupName);
+    } else {
+        groupName = sel?.value;
+    }
+    if (!groupName && Object.keys(appState.currentTab.groups).length === 0) {
+        groupName = 'Bookmarks';
+        createGroupObj(groupName);
+    }
+    appState.currentTab.groups[groupName].bookmarks.push({
+        title: getPageTitle(url),
+        url, thumbnailUrl: getFaviconUrl(url),
+        dateAdded: new Date().toISOString(),
+        backgroundColor: '#252525'
+    });
+    const overlay = document.getElementById('addBmModal');
+    if (overlay?._onDone) overlay._onDone();
+    closeModal('addBmModal');
+    saveAndSync();
+    renderBookmarks();
+};
+
+function createGroupObj(name) {
+    appState.currentTab.groups[name] = {
+        bookmarks: [], isCollapsed: false,
+        order: Object.keys(appState.currentTab.groups).length,
+        headerColor: '#2A2A2A', backgroundColor: '#1A1A1A',
+        positionX: 20, positionY: 20, level: 0
+    };
+}
+
+function showAddBmDialog(groupName) {
+    const url = prompt('Bookmark URL:');
+    if (!url) return;
+    let clean = url.trim();
+    if (!clean.startsWith('http')) clean = 'https://' + clean;
+    appState.currentTab.groups[groupName]?.bookmarks.push({
+        title: getPageTitle(clean), url: clean,
+        thumbnailUrl: getFaviconUrl(clean),
+        dateAdded: new Date().toISOString(),
+        backgroundColor: '#252525'
+    });
+    saveAndSync();
+    renderBookmarks();
+}
+
+function deleteBookmark(groupName, idx) {
+    appState.currentTab.groups[groupName]?.bookmarks.splice(idx, 1);
+    saveAndSync();
+    renderBookmarks();
+}
+
+function showBmCtxMenu(event, groupName, idx) {
+    event.preventDefault();
+    event.stopPropagation();
+    const bm = appState.currentTab?.groups[groupName]?.bookmarks[idx];
+    if (!bm) return;
+    showCtxMenu(event.clientX, event.clientY, [
+        { icon: '🔗', label: 'Open link', action: `window.open(${JSON.stringify(bm.url)}, '_blank')` },
+        { icon: '📋', label: 'Copy URL', action: `navigator.clipboard.writeText(${JSON.stringify(bm.url)})` },
+        { sep: true },
+        { icon: '🗑️', label: 'Delete bookmark', action: `deleteBookmark(${JSON.stringify(groupName)}, ${idx})`, danger: true }
+    ]);
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+function renderBookmarks() {
+    const container = document.getElementById('bookmarksArea');
+    container.style.backgroundColor = appState.backgroundColor;
+
+    if (!appState.currentTab) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">🔗</div><p>No tab selected.<br>Create a tab to get started.</p></div>';
+        return;
+    }
+
+    const groups = sortedGroups(appState.currentTab.groups);
+
+    if (groups.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">📁</div><p>No groups yet.<br>Right-click to add a group, or paste a URL above.</p></div>';
+        return;
+    }
+
+    container.innerHTML = groups.map(group => {
+        const bookmarksHtml = (group.bookmarks || []).map((bm, idx) => `
+            <div class="bookmark-card" style="background-color:${bm.backgroundColor}"
+                ondblclick="window.open(${JSON.stringify(bm.url)}, '_blank')"
+                oncontextmenu="showBmCtxMenu(event, ${JSON.stringify(group.name)}, ${idx})">
+                <img src="${bm.thumbnailUrl || getFaviconUrl(bm.url)}" class="bookmark-icon"
+                    onerror="this.style.display='none'">
+                <div class="bookmark-info">
+                    <div class="bookmark-title">${escHtml(bm.title)}</div>
+                    <div class="bookmark-url">${escHtml(bm.url)}</div>
                 </div>
-            `).join('');
-        }
+            </div>
+        `).join('');
 
-        // Import/Export
-        function exportCurrentTab() {
-            if (!appState.currentTab) return;
-            
-            // Export in BOTH formats for maximum compatibility
-            const data = {
-                // PascalCase for C# WPF compatibility
-                Name: appState.currentTab.name,
-                TabColor: appState.currentTab.tabColor,
-                Groups: Object.entries(appState.currentTab.groups).map(([name, group]) => ({
-                    Name: name,
-                    HeaderColor: group.headerColor,
-                    BackgroundColor: group.backgroundColor,
-                    IsCollapsed: group.isCollapsed,
-                    Order: group.order,
-                    Bookmarks: (group.bookmarks || []).map(b => ({
-                        Title: b.title,
-                        Url: b.url,
-                        ThumbnailUrl: b.thumbnailUrl,
-                        DateAdded: b.dateAdded,
-                        BackgroundColor: b.backgroundColor
-                    }))
-                })),
-                // camelCase for web version compatibility (fallback)
-                name: appState.currentTab.name,
-                tabColor: appState.currentTab.tabColor,
-                groups: Object.entries(appState.currentTab.groups).map(([name, group]) => ({
-                    name,
-                    headerColor: group.headerColor,
-                    backgroundColor: group.backgroundColor,
-                    isCollapsed: group.isCollapsed,
-                    order: group.order,
-                    bookmarks: group.bookmarks
-                }))
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${appState.currentTab.name}.lynk`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
+        return `
+        <div class="group-card">
+            <div class="group-header" style="background-color:${group.headerColor}">
+                <div class="group-header-left" onclick="toggleGroup(${JSON.stringify(group.name)})">
+                    <span class="chevron${group.isCollapsed ? ' collapsed' : ''}">▼</span>
+                    <span class="group-title">${escHtml(group.name)}</span>
+                    <span class="group-count">(${(group.bookmarks||[]).length})</span>
+                </div>
+                <button class="more-btn" onclick="showGroupCtxMenu(event, ${JSON.stringify(group.name)})">⋮</button>
+            </div>
+            <div class="group-content${group.isCollapsed ? ' hidden' : ''}" style="background-color:${group.backgroundColor}">
+                ${bookmarksHtml || '<p style="color:#555;font-size:13px">No bookmarks yet. Right-click to add one.</p>'}
+            </div>
+        </div>`;
+    }).join('');
+}
 
-        function importTab() {
-            document.getElementById('fileInput').click();
-        }
+function showBgContextMenu(event) {
+    event.preventDefault();
+    showCtxMenu(event.clientX, event.clientY, [
+        { icon: '📁', label: 'Add new group', action: "showAddGroupDialog()" }
+    ]);
+}
+window.showBgContextMenu = showBgContextMenu;
 
-        function handleFileImport(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    console.log('Imported data:', data); // Debug log
-                    
-                    // Check if this is a full backup file (contains multiple tabs)
-                    if (data.tabs && Array.isArray(data.tabs)) {
-                        importFullBackup(data);
-                        return;
-                    }
-                    
-                    // Otherwise, import as single tab
-                    importSingleTab(data);
-                    
-                } catch (error) {
-                    console.error('Import error:', error);
-                    alert('Error importing file: ' + error.message + '\n\nCheck console for details.');
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
+function showAddGroupDialog() {
+    const name = prompt('Group name:');
+    if (name?.trim()) createGroup(name.trim());
+}
 
-        function importFullBackup(backupData) {
-            let importedCount = 0;
-            
-            backupData.tabs.forEach(tabData => {
-                let tabName = tabData.Name || tabData.name || 'Imported Tab';
-                let counter = 1;
-                const originalName = tabName;
-                
-                while (appState.tabs.some(t => t.name === tabName)) {
-                    counter++;
-                    tabName = `${originalName} (${counter})`;
-                }
-                
-                const newTab = {
-                    name: tabName,
-                    tabColor: tabData.TabColor || tabData.tabColor || '#2A4D6A',
-                    groups: {}
-                };
-                
-                const groupsData = tabData.Groups || tabData.groups || [];
-                
-                if (Array.isArray(groupsData)) {
-                    groupsData.forEach((group, index) => {
-                        const groupName = group.Name || group.name || `Group ${index + 1}`;
-                        newTab.groups[groupName] = {
-                            headerColor: group.HeaderColor || group.headerColor || '#2A2A2A',
-                            backgroundColor: group.BackgroundColor || group.backgroundColor || '#1A1A1A',
-                            isCollapsed: group.IsCollapsed || group.isCollapsed || false,
-                            order: group.Order !== undefined ? group.Order : (group.order !== undefined ? group.order : index),
-                            bookmarks: []
-                        };
-                        
-                        const bookmarksData = group.Bookmarks || group.bookmarks || [];
-                        if (Array.isArray(bookmarksData)) {
-                            bookmarksData.forEach(bookmark => {
-                                newTab.groups[groupName].bookmarks.push({
-                                    title: bookmark.Title || bookmark.title || 'Untitled',
-                                    url: bookmark.Url || bookmark.url || '',
-                                    thumbnailUrl: bookmark.ThumbnailUrl || bookmark.thumbnailUrl || '',
-                                    dateAdded: bookmark.DateAdded || bookmark.dateAdded || new Date().toISOString(),
-                                    backgroundColor: bookmark.BackgroundColor || bookmark.backgroundColor || '#252525'
-                                });
-                            });
-                        }
-                    });
-                }
-                
-                appState.tabs.push(newTab);
-                importedCount++;
-            });
-            
-            appState.currentTab = appState.tabs[appState.tabs.length - 1];
-            saveToStorage();
-            renderTabs();
-            renderBookmarks();
-            
-            const totalBookmarks = appState.tabs.reduce((sum, tab) => {
-                return sum + Object.values(tab.groups || {}).reduce((gSum, group) => {
-                    return gSum + (group.bookmarks?.length || 0);
-                }, 0);
-            }, 0);
-            
-            alert(`✅ Full backup restored!\n\nImported ${importedCount} tabs with ${totalBookmarks} total bookmarks.`);
-        }
+// ═══════════════════════════════════════════════════════
+// IMPORT / EXPORT
+// ═══════════════════════════════════════════════════════
+function exportCurrentTab() {
+    if (!appState.currentTab) { alert('No tab selected.'); return; }
+    exportTabByName(appState.currentTab.name);
+}
 
-        function importSingleTab(data) {
-            let tabName = data.Name || data.name || 'Imported Tab';
-            let tabColor = data.TabColor || data.tabColor || '#2A4D6A';
-            let groupsData = data.Groups || data.groups || [];
-            
-            let counter = 1;
-            const originalName = tabName;
-            while (appState.tabs.some(t => t.name === tabName)) {
-                counter++;
-                tabName = `${originalName} (${counter})`;
-            }
-            
-            const newTab = {
-                name: tabName,
-                tabColor: tabColor,
-                groups: {}
-            };
-            
-            if (Array.isArray(groupsData)) {
-                groupsData.forEach((group, index) => {
-                    const groupName = group.Name || group.name || `Group ${index + 1}`;
-                    newTab.groups[groupName] = {
-                        headerColor: group.HeaderColor || group.headerColor || '#2A2A2A',
-                        backgroundColor: group.BackgroundColor || group.backgroundColor || '#1A1A1A',
-                        isCollapsed: group.IsCollapsed || group.isCollapsed || false,
-                        order: group.Order !== undefined ? group.Order : (group.order !== undefined ? group.order : index),
-                        bookmarks: []
-                    };
-                    
-                    const bookmarksData = group.Bookmarks || group.bookmarks || [];
-                    if (Array.isArray(bookmarksData)) {
-                        bookmarksData.forEach(bookmark => {
-                            newTab.groups[groupName].bookmarks.push({
-                                title: bookmark.Title || bookmark.title || 'Untitled',
-                                url: bookmark.Url || bookmark.url || '',
-                                thumbnailUrl: bookmark.ThumbnailUrl || bookmark.thumbnailUrl || '',
-                                dateAdded: bookmark.DateAdded || bookmark.dateAdded || new Date().toISOString(),
-                                backgroundColor: bookmark.BackgroundColor || bookmark.backgroundColor || '#252525'
-                            });
-                        });
-                    }
-                });
-            }
-            
-            appState.tabs.push(newTab);
-            appState.currentTab = newTab;
-            saveToStorage();
-            renderTabs();
-            renderBookmarks();
-            
-            const totalBookmarks = Object.values(newTab.groups).reduce((sum, g) => sum + g.bookmarks.length, 0);
-            alert(`✅ Tab imported!\n\n${Object.keys(newTab.groups).length} groups with ${totalBookmarks} bookmarks.`);
-        }
+function exportTabByName(name) {
+    const tab = appState.tabs.find(t => t.name === name);
+    if (!tab) return;
+    const data = {
+        Name: tab.name, TabColor: tab.tabColor,
+        Groups: sortedGroups(tab.groups).map(groupToGroupData),
+        name: tab.name, tabColor: tab.tabColor,
+        groups: sortedGroups(tab.groups)
+    };
+    dlJson(data, `${tab.name}.lynk`);
+}
 
-        // Context Menus
-        let activeContextMenu = null;
+function importTab() { document.getElementById('fileInput').click(); }
 
-        function closeContextMenu() {
-            if (activeContextMenu) {
-                activeContextMenu.remove();
-                activeContextMenu = null;
-            }
-        }
-
-        function showContextMenu(x, y, items) {
-            closeContextMenu();
-            
-            const menu = document.createElement('div');
-            menu.className = 'context-menu';
-            menu.style.left = x + 'px';
-            menu.style.top = y + 'px';
-            menu.innerHTML = items.map(item => `
-                <button class="context-menu-item ${item.danger ? 'danger' : ''}" onclick="${item.action}">
-                    ${item.icon} ${item.label}
-                </button>
-            `).join('');
-            
-            document.body.appendChild(menu);
-            activeContextMenu = menu;
-            
-            setTimeout(() => {
-                document.addEventListener('click', closeContextMenu, { once: true });
-            }, 0);
-        }
-
-        function showGroupContextMenu(event, groupName) {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            showContextMenu(event.clientX, event.clientY, [
-                { icon: '➕', label: 'Add Bookmark', action: `showAddBookmarkDialog('${groupName}'); closeContextMenu();` },
-                { icon: '🗑️', label: 'Delete Group', action: `deleteGroup('${groupName}'); closeContextMenu();`, danger: true }
-            ]);
-        }
-
-        function showBookmarkContextMenu(event, groupName, bookmarkIndex) {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            showContextMenu(event.clientX, event.clientY, [
-                { icon: '🗑️', label: 'Delete Bookmark', action: `deleteBookmark('${groupName}', ${bookmarkIndex}); closeContextMenu();`, danger: true }
-            ]);
-        }
-
-        function showBackgroundContextMenu(event) {
-            event.preventDefault();
-            
-            showContextMenu(event.clientX, event.clientY, [
-                { icon: '📁', label: 'Add New Group', action: 'showAddGroupDialog(); closeContextMenu();' }
-            ]);
-        }
-
-        function showTabContextMenu(event, tab) {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            const tabJson = JSON.stringify(tab).replace(/"/g, '&quot;');
-            
-            showContextMenu(event.clientX, event.clientY, [
-                { icon: '📤', label: 'Export Tab', action: `exportCurrentTab(); closeContextMenu();` },
-                { icon: '🗑️', label: 'Delete Tab', action: `deleteTab(${tabJson}); closeContextMenu();`, danger: true }
-            ]);
-        }
-
-        // Dialogs
-        function showAddGroupDialog() {
-            const name = prompt('Group name:');
-            if (name) createGroup(name);
-        }
-
-        function showAddTabDialog() {
-            const name = prompt('Tab name:');
-            if (name) createTab(name);
-        }
-
-        function showAddBookmarkDialog(groupName) {
-            const url = prompt('Bookmark URL:');
-            if (!url) return;
-            
-            document.getElementById('urlInput').value = url;
-            addBookmark();
-        }
-
-        // Utilities
-        function toggleMaximize() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
+function handleFileImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.tabs && Array.isArray(data.tabs)) {
+                importBackup(data);
             } else {
-                document.exitFullscreen();
+                const tab = parseTabData(data);
+                ensureUniqueName(tab);
+                appState.tabs.push(tab);
+                appState.currentTab = tab;
+                saveAndSync();
+                renderTabs();
+                renderBookmarks();
+                alert(`Imported "${tab.name}" with ${Object.keys(tab.groups).length} groups.`);
             }
-        }
+        } catch (err) { alert('Error importing: ' + err.message); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
 
-        // Initialize app
-        init();
-    </script>
+function importBackup(data) {
+    let count = 0;
+    (data.tabs || []).forEach(td => {
+        const tab = parseTabData(td);
+        ensureUniqueName(tab);
+        appState.tabs.push(tab);
+        count++;
+    });
+    appState.currentTab = appState.tabs[appState.tabs.length - 1];
+    saveAndSync();
+    renderTabs();
+    renderBookmarks();
+    alert(`Imported ${count} tab(s) from backup.`);
+}
+
+function ensureUniqueName(tab) {
+    let name = tab.name;
+    let i = 1;
+    while (appState.tabs.some(t => t.name === name)) name = `${tab.name} (${++i})`;
+    tab.name = name;
+}
+
+// ═══════════════════════════════════════════════════════
+// CONTEXT MENU
+// ═══════════════════════════════════════════════════════
+let _activeCtx = null;
+function showCtxMenu(x, y, items) {
+    closeAllOverlays();
+    const menu = document.createElement('div');
+    menu.className = 'context-menu';
+    menu.id = '_ctxMenu';
+    menu.innerHTML = items.map(item => item.sep
+        ? '<hr class="ctx-sep">'
+        : `<button class="ctx-item${item.danger ? ' danger' : ''}" onclick="${item.action}; closeAllOverlays()">${item.icon} ${item.label}</button>`
+    ).join('');
+    document.body.appendChild(menu);
+    _activeCtx = menu;
+
+    // Position
+    const mw = 200, mh = items.length * 36;
+    menu.style.left = Math.min(x, window.innerWidth - mw - 8) + 'px';
+    menu.style.top = Math.min(y, window.innerHeight - mh - 8) + 'px';
+
+    setTimeout(() => document.addEventListener('click', closeAllOverlays, { once: true }), 0);
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function mkOverlay(id) {
+    const el = document.createElement('div');
+    el.className = 'modal-overlay';
+    el.id = id;
+    return el;
+}
+
+function closeModal(id) {
+    document.getElementById(id)?.remove();
+}
+
+function closeAllOverlays() {
+    ['_ctxMenu', 'accountDropdown', 'authModal', 'addBmModal'].forEach(id => {
+        document.getElementById(id)?.remove();
+    });
+}
+
+function setSyncStatus(msg) {
+    document.getElementById('syncStatusText').textContent = msg;
+}
+
+function fmtTime() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function escHtml(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function dlJson(data, filename) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Clipboard monitoring — auto-fill URL bar
+let _lastClip = '';
+setInterval(() => {
+    if (document.hasFocus()) {
+        navigator.clipboard?.readText?.().then(text => {
+            if (text !== _lastClip && /^(https?:\/\/|www\.)[^\s]+$/.test(text)) {
+                _lastClip = text;
+                const inp = document.getElementById('urlInput');
+                if (inp && !inp.value) {
+                    inp.value = text;
+                    inp.style.borderColor = '#5aed5a';
+                    setTimeout(() => inp.style.borderColor = '', 2000);
+                }
+            }
+        }).catch(() => {});
+    }
+}, 1500);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { addBookmark(); e.preventDefault(); }
+});
+
+// ─────────────────────────────
+init();
+</script>
 </body>
 </html>
