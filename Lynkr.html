@@ -969,15 +969,31 @@ function renderTabs() {
     container.innerHTML = '';
     appState.tabs.forEach(tab => {
         const isActive = appState.currentTab?.name === tab.name;
+
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:4px;';
+
         const btn = document.createElement('button');
         btn.className = 'tab-button' + (isActive ? ' active' : '');
+        btn.style.cssText = `flex:1;margin-bottom:0;${isActive ? `background-color:${tab.tabColor};color:white;` : ''}`;
         btn.textContent = tab.name;
-        if (isActive) btn.style.cssText = `background-color:${tab.tabColor};color:white;`;
         btn.onclick = () => switchTab(tab.name);
-        btn.oncontextmenu = (e) => { e.preventDefault(); showTabCtxMenu(e, tab.name); };
-        container.appendChild(btn);
+
+        const optBtn = document.createElement('button');
+        optBtn.className = 'more-btn';
+        optBtn.textContent = '⋮';
+        optBtn.style.cssText = 'flex-shrink:0;padding:6px 8px;';
+        optBtn.onclick = (e) => {
+            e.stopPropagation();
+            showTabCtxMenu(e, tab.name);
+        };
+
+        row.appendChild(btn);
+        row.appendChild(optBtn);
+        container.appendChild(row);
     });
 }
+
 function showAddTabDialog() {
     const name = prompt('Tab name:');
     if (name?.trim()) createTab(name.trim());
