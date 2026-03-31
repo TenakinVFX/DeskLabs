@@ -1071,10 +1071,27 @@ function showGroupCtxMenu(event, groupName) {
     event.stopPropagation();
     showCtxMenu(event.clientX, event.clientY, [
         { icon: '➕', label: 'Add bookmark', action: () => showAddBmDialog(groupName) },
+        { icon: '✏️', label: 'Rename group', action: () => renameGroup(groupName) },
         { sep: true },
         { icon: '🗑️', label: 'Delete group', action: () => deleteGroup(groupName), danger: true }
     ]);
 }
+
+function renameGroup(oldName) {
+    const newName = prompt('New group name:', oldName);
+    if (!newName?.trim() || newName.trim() === oldName) return;
+    const trimmed = newName.trim();
+    if (appState.currentTab.groups[trimmed]) {
+        alert('A group with that name already exists.');
+        return;
+    }
+    const group = appState.currentTab.groups[oldName];
+    appState.currentTab.groups[trimmed] = group;
+    delete appState.currentTab.groups[oldName];
+    saveAndSync();
+    renderBookmarks();
+}
+
 
 // ═══════════════════════════════════════════════════════
 // BOOKMARKS
