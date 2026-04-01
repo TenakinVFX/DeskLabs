@@ -1800,11 +1800,12 @@ async function generateShareCode(tabName, isLive) {
                 is_live: isLive
             });
 if (error) throw error;
-console.log('code:', code); // ADD THIS TEMPORARILY
-        alertEl.className = 'alert-banner';
-        document.getElementById('shareCodeDisplay').textContent = code;
-        document.getElementById('shareResult').classList.remove('hidden');
-        window._currentShareCode = code;
+console.log('code:', code);
+const resultEl = document.getElementById('shareResult');
+console.log('shareResult el:', resultEl);
+resultEl.classList.remove('hidden');
+document.getElementById('shareCodeDisplay').textContent = code;
+window._currentShareCode = code;
     } catch (e) {
         alertEl.textContent = 'Failed: ' + e.message;
         alertEl.className = 'alert-banner alert-error';
