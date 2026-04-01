@@ -1780,13 +1780,18 @@ async function generateShareCode(tabName, isLive) {
     if (!currentUser) return;
     const tab = appState.tabs.find(t => t.name === tabName);
     if (!tab) return;
+
     const alertEl = document.getElementById('shareTabAlert');
     const snapshotBtn = document.getElementById('snapshotBtn');
     const liveBtn = document.getElementById('liveBtn');
+    const shareResult = document.getElementById('shareResult');
+    const shareCodeDisplay = document.getElementById('shareCodeDisplay');
+
     snapshotBtn.disabled = true;
     liveBtn.disabled = true;
     alertEl.textContent = 'Generating code…';
     alertEl.className = 'alert-banner alert-success';
+
     try {
         const tabDataJson = JSON.stringify(tabToTabData(tab));
         const code = generateCode();
@@ -1799,13 +1804,11 @@ async function generateShareCode(tabName, isLive) {
                 tab_data: tabDataJson,
                 is_live: isLive
             });
-if (error) throw error;
-console.log('code:', code);
-const resultEl = document.getElementById('shareResult');
-console.log('shareResult el:', resultEl);
-resultEl.classList.remove('hidden');
-document.getElementById('shareCodeDisplay').textContent = code;
-window._currentShareCode = code;
+        if (error) throw error;
+        alertEl.className = 'alert-banner';
+        shareCodeDisplay.textContent = code;
+        shareResult.classList.remove('hidden');
+        window._currentShareCode = code;
     } catch (e) {
         alertEl.textContent = 'Failed: ' + e.message;
         alertEl.className = 'alert-banner alert-error';
