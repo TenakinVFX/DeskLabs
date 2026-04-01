@@ -1799,7 +1799,8 @@ async function generateShareCode(tabName, isLive) {
                 tab_data: tabDataJson,
                 is_live: isLive
             });
-        if (error) throw error;
+if (error) throw error;
+console.log('code:', code); // ADD THIS TEMPORARILY
         alertEl.className = 'alert-banner';
         document.getElementById('shareCodeDisplay').textContent = code;
         document.getElementById('shareResult').classList.remove('hidden');
