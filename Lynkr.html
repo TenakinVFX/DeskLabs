@@ -734,6 +734,27 @@ async function pushToCloud() {
             .from('lynkr_bookmarks')
             .upsert({ id: currentUser.id, user_id: currentUser.id, data: JSON.parse(saveDataJson) });
         if (error) throw error;
+
+        // Update any live share rows with fresh tab data
+        const { data: liveShares } = await sb
+            .from('lynkr_shared_tabs')
+            .select('share_code, tab_name')
+            .eq('owner_user_id', currentUser.id)
+            .eq('is_live', true);
+
+        if (liveShares?.length) {
+            const parsed = JSON.parse(saveDataJson);
+            for (const share of liveShares) {
+                const tabData = (parsed.Tabs || []).find(t => t.Name === share.tab_name);
+                if (tabData) {
+                    await sb
+                        .from('lynkr_shared_tabs')
+                        .update({ tab_data: JSON.stringify(tabData) })
+                        .eq('share_code', share.share_code);
+                }
+            }
+        }
+
         setSyncStatus('Synced ' + fmtTime());
     } catch (e) {
         setSyncStatus('Sync failed');
@@ -743,6 +764,7 @@ async function pushToCloud() {
         syncBtn.classList.remove('syncing');
     }
 }
+
 
 async function pullFromCloud() {
     if (!currentUser) return;
