@@ -1520,43 +1520,30 @@ async function importFromShareRow(row) {
         let tabJson;
 
         if (row.is_live) {
-    const { data, error } = await sb
-        .from('lynkr_bookmarks')
-        .select('data')
-        .eq('user_id', row.owner_user_id)
-        .maybeSingle();
+            const { data, error } = await sb
+                .from('lynkr_bookmarks')
+                .select('data')
+                .eq('user_id', row.owner_user_id)
+                .maybeSingle();
 
-    if (!error && data?.data) {
-        // use cloud data as before...
-    } else {
-        // Fall back to the snapshot stored at share time
-        tabJson = row.tab_data;
-    }
-}
+            if (!error && data?.data) {
+                const saveData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+                let foundTabData = (saveData.Tabs || saveData.tabs || [])
+                    .find(t => (t.Name || t.name) === row.tab_name);
 
-
-            const saveData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
-            let foundTabData = null;
-
-            // Search standalone tabs
-            foundTabData = (saveData.Tabs || saveData.tabs || [])
-                .find(t => (t.Name || t.name) === row.tab_name);
-
-            // Search container tabs
-            if (!foundTabData) {
-                for (const c of (saveData.TabContainers || saveData.tabContainers || [])) {
-                    foundTabData = (c.Tabs || c.tabs || [])
-                        .find(t => (t.Name || t.name) === row.tab_name);
-                    if (foundTabData) break;
+                if (!foundTabData) {
+                    for (const c of (saveData.TabContainers || saveData.tabContainers || [])) {
+                        foundTabData = (c.Tabs || c.tabs || [])
+                            .find(t => (t.Name || t.name) === row.tab_name);
+                        if (foundTabData) break;
+                    }
                 }
-            }
 
-            if (!foundTabData) {
-                alert(`The tab "${row.tab_name}" no longer exists in the owner's account.`);
-                return;
+                tabJson = foundTabData ? JSON.stringify(foundTabData) : row.tab_data;
+            } else {
+                // RLS blocked or no cloud data — fall back to snapshot
+                tabJson = row.tab_data;
             }
-
-            tabJson = JSON.stringify(foundTabData);
         } else {
             tabJson = row.tab_data;
         }
@@ -1564,12 +1551,8 @@ async function importFromShareRow(row) {
         const rawTabData = typeof tabJson === 'string' ? JSON.parse(tabJson) : tabJson;
         const tab = parseTabData(rawTabData);
 
-        // Prefix live tabs so user knows
         if (row.is_live) tab.name = '🔴 ' + tab.name;
-
         ensureUniqueName(tab);
-
-        // Store share code on tab so we can refresh it later
         if (row.is_live) tab._liveShareCode = row.share_code;
 
         appState.tabs.push(tab);
@@ -1585,6 +1568,7 @@ async function importFromShareRow(row) {
         alert('Error importing tab: ' + e.message);
     }
 }
+
 
 async function refreshLiveTabs() {
     const liveTabs = appState.tabs.filter(t => t._liveShareCode);
