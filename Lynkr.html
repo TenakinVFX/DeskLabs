@@ -1790,6 +1790,11 @@ async function generateShareCode(tabName, isLive) {
     const tab = appState.tabs.find(t => t.name === tabName);
     if (!tab) return;
 
+    // Force push so owner's data exists in the cloud
+    if (isLive) {
+        await pushToCloud();
+    }
+
     const alertEl = document.getElementById('shareTabAlert');
     const snapshotBtn = document.getElementById('snapshotBtn');
     const liveBtn = document.getElementById('liveBtn');
