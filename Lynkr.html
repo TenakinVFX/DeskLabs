@@ -1812,7 +1812,8 @@ async function generateShareCode(tabName, isLive) {
         shareCodeDisplay.textContent = code;
         shareResult.classList.remove('hidden');
         window._currentShareCode = code;
-navigator.clipboard.writeText(code);  // ← add this line
+try { await navigator.clipboard.writeText(code); } catch(e) {}
+
 
     } catch (e) {
         alertEl.textContent = 'Failed: ' + e.message;
