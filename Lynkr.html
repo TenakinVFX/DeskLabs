@@ -1739,6 +1739,7 @@ document.addEventListener('keydown', e => {
 });
 function showShareTabDialog(tabName) {
     closeAllOverlays();
+    window._shareTabName = tabName; // ADD THIS
     const overlay = mkOverlay('shareTabModal');
     overlay.innerHTML = `
     <div class="modal">
@@ -1749,11 +1750,11 @@ function showShareTabDialog(tabName) {
         <div class="modal-body">
             <div id="shareTabAlert" class="alert-banner"></div>
             <p style="font-size:13px;color:#888;margin-bottom:16px">Generate a 6-character code others can use to import this tab.</p>
-            <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;text-align:left;padding:14px;" id="snapshotBtn" onclick="generateShareCode('${tabName}', false)">
+            <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;text-align:left;padding:14px;" id="snapshotBtn" onclick="generateShareCode(window._shareTabName, false)">
                 📸 &nbsp;<strong>Snapshot</strong>
                 <div style="font-size:11px;color:#666;margin-top:4px">Share a fixed copy of the tab as it is right now</div>
             </button>
-            <button class="btn btn-secondary" style="width:100%;text-align:left;padding:14px;" id="liveBtn" onclick="generateShareCode('${tabName}', true)">
+            <button class="btn btn-secondary" style="width:100%;text-align:left;padding:14px;" id="liveBtn" onclick="generateShareCode(window._shareTabName, true)">
                 🔴 &nbsp;<strong>Live</strong>
                 <div style="font-size:11px;color:#666;margin-top:4px">Recipients always see your latest version (requires cloud account)</div>
             </button>
