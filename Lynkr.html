@@ -1676,10 +1676,11 @@ function showCtxMenu(x, y, items) {
             btn.className = 'ctx-item' + (item.danger ? ' danger' : '');
             btn.innerHTML = `${item.icon} ${item.label}`;
             btn.onclick = (e) => {
-                e.stopPropagation();
-                closeAllOverlays();
-                item.action();
-            };
+    e.stopPropagation();
+    closeAllOverlays();
+    setTimeout(() => item.action(), 0);  // ← add setTimeout here
+};
+
             menu.appendChild(btn);
         }
     });
