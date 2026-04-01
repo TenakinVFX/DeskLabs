@@ -1762,11 +1762,14 @@ function showShareTabDialog(tabName) {
                 <div style="font-size:11px;color:#666;margin-top:4px">Recipients always see your latest version (requires cloud account)</div>
             </button>
             <div id="shareResult" class="hidden" style="margin-top:18px;text-align:center;">
-                <div style="font-size:12px;color:#888;margin-bottom:8px">Share this code:</div>
-                <div id="shareCodeDisplay" style="font-size:32px;font-family:monospace;font-weight:700;letter-spacing:8px;color:#fff;cursor:pointer;" onclick="copyShareCode()" title="Click to copy"></div>
-             <div style="font-size:11px;color:#4caf50;margin-top:6px">✓ Copied to clipboard!</div>
+    <div style="font-size:12px;color:#888;margin-bottom:8px">Share this code:</div>
+    <div id="shareCodeDisplay" style="font-size:32px;font-family:monospace;font-weight:700;letter-spacing:8px;color:#fff;background:#2a2a2a;padding:16px;border-radius:8px;cursor:pointer;" onclick="copyShareCode()" title="Tap to copy"></div>
+    <button onclick="copyShareCode()" class="btn btn-primary" style="width:100%;margin-top:12px;" id="copyBtn">📋 Copy Code</button>
+    <div id="copiedMsg" style="font-size:11px;color:#4caf50;margin-top:6px;display:none;">✓ Copied!</div>
+</div>
 
-            </div>
+
+          
         </div>
     </div>`;
         document.body.appendChild(overlay);
@@ -1832,11 +1835,19 @@ function copyShareCode() {
     const code = window._currentShareCode;
     if (!code) return;
     navigator.clipboard.writeText(code).then(() => {
-        const el = document.getElementById('shareCodeDisplay');
-        el.textContent = 'Copied!';
-        setTimeout(() => { el.textContent = code; }, 1500);
+        document.getElementById('copiedMsg').style.display = 'block';
+        document.getElementById('copyBtn').textContent = '✓ Copied!';
+        setTimeout(() => {
+            document.getElementById('copiedMsg').style.display = 'none';
+            document.getElementById('copyBtn').textContent = '📋 Copy Code';
+        }, 2000);
+    }).catch(() => {
+        // Fallback for browsers that still block it
+        document.getElementById('shareCodeDisplay').style.userSelect = 'all';
+        alert('Tap and hold the code to copy it manually.');
     });
 }
+
 init();
 </script>
 </body>
