@@ -1738,10 +1738,10 @@ document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { addBookmark(); e.preventDefault(); }
 });
 function showShareTabDialog(tabName) {
-    closeAllOverlays();
-    window._shareTabName = tabName; // ADD THIS
-    const overlay = mkOverlay('shareTabModal');
-    overlay.innerHTML = `
+    window._shareTabName = tabName;
+    setTimeout(() => {
+        const overlay = mkOverlay('shareTabModal');
+        overlay.innerHTML = `
     <div class="modal">
         <div class="modal-header">
             <h3>Share "${tabName}"</h3>
@@ -1765,17 +1765,17 @@ function showShareTabDialog(tabName) {
             </div>
         </div>
     </div>`;
-    document.body.appendChild(overlay);
-    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('shareTabModal'); });
-    if (!currentUser) {
-        const alertEl = document.getElementById('shareTabAlert');
-        alertEl.textContent = 'Sign in to generate share codes.';
-        alertEl.className = 'alert-banner alert-error';
-        document.getElementById('snapshotBtn').disabled = true;
-        document.getElementById('liveBtn').disabled = true;
-    }
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('shareTabModal'); });
+        if (!currentUser) {
+            const alertEl = document.getElementById('shareTabAlert');
+            alertEl.textContent = 'Sign in to generate share codes.';
+            alertEl.className = 'alert-banner alert-error';
+            document.getElementById('snapshotBtn').disabled = true;
+            document.getElementById('liveBtn').disabled = true;
+        }
+    }, 50);
 }
-
 async function generateShareCode(tabName, isLive) {
     if (!currentUser) return;
     const tab = appState.tabs.find(t => t.name === tabName);
