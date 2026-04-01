@@ -1005,7 +1005,8 @@ function showTabCtxMenu(event, tabName) {
     event.stopPropagation();
     showCtxMenu(event.clientX, event.clientY, [
         { icon: '📤', label: 'Export tab', action: () => exportTabByName(tabName) },
-        { icon: '✏️', label: 'Rename tab', action: () => renameTab(tabName) },
+{ icon: '🔗', label: 'Share tab', action: () => showShareTabDialog(tabName) }, // ADD THIS
+{ icon: '✏️', label: 'Rename tab', action: () => renameTab(tabName) },
         { sep: true },
         { icon: '🗑️', label: 'Delete tab', action: () => deleteTab(tabName), danger: true }
     ]);
@@ -1707,7 +1708,7 @@ function closeModal(id) {
 }
 
 function closeAllOverlays() {
-    ['_ctxMenu', 'accountDropdown', 'authModal', 'addBmModal'].forEach(id => {
+['_ctxMenu', 'accountDropdown', 'authModal', 'addBmModal', 'shareTabModal'].forEach(id => {
         document.getElementById(id)?.remove();
     });
 }
@@ -1736,7 +1737,94 @@ function dlJson(data, filename) {
 document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { addBookmark(); e.preventDefault(); }
 });
+function showShareTabDialog(tabName) {
+    closeAllOverlays();
+    const overlay = mkOverlay('shareTabModal');
+    overlay.innerHTML = `
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Share "${tabName}"</h3>
+            <button class="modal-close" onclick="closeModal('shareTabModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div id="shareTabAlert" class="alert-banner"></div>
+            <p style="font-size:13px;color:#888;margin-bottom:16px">Generate a 6-character code others can use to import this tab.</p>
+            <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;text-align:left;padding:14px;" id="snapshotBtn" onclick="generateShareCode('${tabName}', false)">
+                📸 &nbsp;<strong>Snapshot</strong>
+                <div style="font-size:11px;color:#666;margin-top:4px">Share a fixed copy of the tab as it is right now</div>
+            </button>
+            <button class="btn btn-secondary" style="width:100%;text-align:left;padding:14px;" id="liveBtn" onclick="generateShareCode('${tabName}', true)">
+                🔴 &nbsp;<strong>Live</strong>
+                <div style="font-size:11px;color:#666;margin-top:4px">Recipients always see your latest version (requires cloud account)</div>
+            </button>
+            <div id="shareResult" class="hidden" style="margin-top:18px;text-align:center;">
+                <div style="font-size:12px;color:#888;margin-bottom:8px">Share this code:</div>
+                <div id="shareCodeDisplay" style="font-size:32px;font-family:monospace;font-weight:700;letter-spacing:8px;color:#fff;cursor:pointer;" onclick="copyShareCode()" title="Click to copy"></div>
+                <div style="font-size:11px;color:#666;margin-top:6px">Click code to copy</div>
+            </div>
+        </div>
+    </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('shareTabModal'); });
+    if (!currentUser) {
+        const alertEl = document.getElementById('shareTabAlert');
+        alertEl.textContent = 'Sign in to generate share codes.';
+        alertEl.className = 'alert-banner alert-error';
+        document.getElementById('snapshotBtn').disabled = true;
+        document.getElementById('liveBtn').disabled = true;
+    }
+}
 
+async function generateShareCode(tabName, isLive) {
+    if (!currentUser) return;
+    const tab = appState.tabs.find(t => t.name === tabName);
+    if (!tab) return;
+    const alertEl = document.getElementById('shareTabAlert');
+    const snapshotBtn = document.getElementById('snapshotBtn');
+    const liveBtn = document.getElementById('liveBtn');
+    snapshotBtn.disabled = true;
+    liveBtn.disabled = true;
+    alertEl.textContent = 'Generating code…';
+    alertEl.className = 'alert-banner alert-success';
+    try {
+        const tabDataJson = JSON.stringify(tabToTabData(tab));
+        const code = generateCode();
+        const { error } = await sb
+            .from('lynkr_shared_tabs')
+            .insert({
+                share_code: code,
+                owner_user_id: currentUser.id,
+                tab_name: tabName,
+                tab_data: tabDataJson,
+                is_live: isLive
+            });
+        if (error) throw error;
+        alertEl.className = 'alert-banner';
+        document.getElementById('shareCodeDisplay').textContent = code;
+        document.getElementById('shareResult').classList.remove('hidden');
+        window._currentShareCode = code;
+    } catch (e) {
+        alertEl.textContent = 'Failed: ' + e.message;
+        alertEl.className = 'alert-banner alert-error';
+        snapshotBtn.disabled = false;
+        liveBtn.disabled = false;
+    }
+}
+
+function generateCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    return Array.from({length: 6}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+function copyShareCode() {
+    const code = window._currentShareCode;
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+        const el = document.getElementById('shareCodeDisplay');
+        el.textContent = 'Copied!';
+        setTimeout(() => { el.textContent = code; }, 1500);
+    });
+}
 init();
 </script>
 </body>
