@@ -464,9 +464,9 @@
             <div class="tabs-list" id="tabsList"></div>
             <div class="sidebar-footer">
                 <div class="sidebar-footer-btns">
-                    <button class="btn btn-secondary" onclick="importTab()">📥 Import</button>
-                    <button class="btn btn-secondary" onclick="exportCurrentTab()">📤 Export</button>
-                </div>
+    <button class="btn btn-secondary" onclick="showImportDialog()">📥 Import</button>
+    <button class="btn btn-secondary" onclick="exportCurrentTab()">📤 Export</button>
+</div>
                 <button class="btn btn-primary" style="width:100%" onclick="showAddTabDialog()">+ New Tab</button>
             </div>
         </div>
@@ -542,8 +542,9 @@ async function init() {
     });
 
     setInterval(async () => {
-        if (currentUser) await pullFromCloud();
-    }, 5 * 60 * 1000);
+    if (currentUser) await pullFromCloud();
+    await refreshLiveTabs();
+}, 5 * 60 * 1000);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1413,7 +1414,225 @@ function handleFileImport(event) {
     reader.readAsText(file);
     event.target.value = '';
 }
+function showImportDialog() {
+    closeAllOverlays();
+    const overlay = mkOverlay('importModal');
+    overlay.innerHTML = `
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Import Bookmarks</h3>
+            <button class="modal-close" onclick="closeModal('importModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:13px;color:#888;margin-bottom:16px">Choose how to import:</p>
+            <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;text-align:left;padding:14px;"
+                onclick="closeModal('importModal'); document.getElementById('fileInput').click()">
+                📁 &nbsp;<strong>Lynkr File (.lynk)</strong>
+                <div style="font-size:11px;color:#666;margin-top:4px">Import a previously exported tab file</div>
+            </button>
+            <button class="btn btn-secondary" style="width:100%;text-align:left;padding:14px;"
+                onclick="closeModal('importModal'); showShareCodeDialog()">
+                🔗 &nbsp;<strong>Enter Share Code</strong>
+                <div style="font-size:11px;color:#666;margin-top:4px">Import a tab shared by another Lynkr user</div>
+            </button>
+        </div>
+    </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('importModal'); });
+}
 
+function showShareCodeDialog() {
+    closeAllOverlays();
+    const overlay = mkOverlay('shareCodeModal');
+    overlay.innerHTML = `
+    <div class="modal">
+        <div class="modal-header">
+            <h3>🔗 Import by Share Code</h3>
+            <button class="modal-close" onclick="closeModal('shareCodeModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <label class="field-label">Enter the 6-character share code</label>
+            <input class="field-input" id="shareCodeInput" 
+                placeholder="e.g. AB3X7K"
+                maxlength="6"
+                style="font-size:22px;font-family:monospace;font-weight:700;letter-spacing:6px;text-transform:uppercase;"
+                oninput="this.value=this.value.toUpperCase()"
+                onkeydown="if(event.key==='Enter') confirmShareCode()">
+            <div id="shareCodeAlert" class="alert-banner"></div>
+            <div class="modal-btns">
+                <button class="btn btn-secondary" onclick="closeModal('shareCodeModal')">Cancel</button>
+                <button class="btn btn-primary" id="shareCodeBtn" onclick="confirmShareCode()">Import</button>
+            </div>
+        </div>
+    </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal('shareCodeModal'); });
+    setTimeout(() => document.getElementById('shareCodeInput')?.focus(), 50);
+}
+
+async function confirmShareCode() {
+    const input = document.getElementById('shareCodeInput');
+    const alertEl = document.getElementById('shareCodeAlert');
+    const btn = document.getElementById('shareCodeBtn');
+    const code = input?.value.trim().toUpperCase();
+
+    if (!code || code.length !== 6) {
+        alertEl.textContent = 'Please enter a 6-character code.';
+        alertEl.className = 'alert-banner alert-error';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Looking up…';
+    alertEl.className = 'alert-banner';
+
+    try {
+        const { data, error } = await sb
+            .from('lynkr_shared_tabs')
+            .select('*')
+            .eq('share_code', code)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+            alertEl.textContent = 'Code not found. Please check and try again.';
+            alertEl.className = 'alert-banner alert-error';
+            btn.disabled = false;
+            btn.textContent = 'Import';
+            return;
+        }
+
+        closeModal('shareCodeModal');
+        await importFromShareRow(data);
+
+    } catch (e) {
+        alertEl.textContent = 'Error: ' + e.message;
+        alertEl.className = 'alert-banner alert-error';
+        btn.disabled = false;
+        btn.textContent = 'Import';
+    }
+}
+
+async function importFromShareRow(row) {
+    try {
+        let tabJson;
+
+        if (row.is_live) {
+            // Fetch owner's current cloud data and find the tab
+            const { data, error } = await sb
+                .from('lynkr_bookmarks')
+                .select('data')
+                .eq('user_id', row.owner_user_id)
+                .maybeSingle();
+
+            if (error || !data?.data) {
+                alert('The owner has no cloud data available.');
+                return;
+            }
+
+            const saveData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+            let foundTabData = null;
+
+            // Search standalone tabs
+            foundTabData = (saveData.Tabs || saveData.tabs || [])
+                .find(t => (t.Name || t.name) === row.tab_name);
+
+            // Search container tabs
+            if (!foundTabData) {
+                for (const c of (saveData.TabContainers || saveData.tabContainers || [])) {
+                    foundTabData = (c.Tabs || c.tabs || [])
+                        .find(t => (t.Name || t.name) === row.tab_name);
+                    if (foundTabData) break;
+                }
+            }
+
+            if (!foundTabData) {
+                alert(`The tab "${row.tab_name}" no longer exists in the owner's account.`);
+                return;
+            }
+
+            tabJson = JSON.stringify(foundTabData);
+        } else {
+            tabJson = row.tab_data;
+        }
+
+        const rawTabData = typeof tabJson === 'string' ? JSON.parse(tabJson) : tabJson;
+        const tab = parseTabData(rawTabData);
+
+        // Prefix live tabs so user knows
+        if (row.is_live) tab.name = '🔴 ' + tab.name;
+
+        ensureUniqueName(tab);
+
+        // Store share code on tab so we can refresh it later
+        if (row.is_live) tab._liveShareCode = row.share_code;
+
+        appState.tabs.push(tab);
+        appState.currentTab = tab;
+        saveAndSync();
+        renderTabs();
+        renderBookmarks();
+
+        const note = row.is_live ? '\n\nThis is a live tab — it will refresh every 5 minutes.' : '';
+        alert(`Successfully imported "${tab.name}"!${note}`);
+
+    } catch (e) {
+        alert('Error importing tab: ' + e.message);
+    }
+}
+
+async function refreshLiveTabs() {
+    const liveTabs = appState.tabs.filter(t => t._liveShareCode);
+    if (liveTabs.length === 0) return;
+
+    for (const tab of liveTabs) {
+        try {
+            const { data: row } = await sb
+                .from('lynkr_shared_tabs')
+                .select('*')
+                .eq('share_code', tab._liveShareCode)
+                .maybeSingle();
+
+            if (!row) continue;
+
+            const { data: ownerData } = await sb
+                .from('lynkr_bookmarks')
+                .select('data')
+                .eq('user_id', row.owner_user_id)
+                .maybeSingle();
+
+            if (!ownerData?.data) continue;
+
+            const saveData = typeof ownerData.data === 'string'
+                ? JSON.parse(ownerData.data) : ownerData.data;
+
+            let foundTabData = (saveData.Tabs || saveData.tabs || [])
+                .find(t => (t.Name || t.name) === row.tab_name);
+
+            if (!foundTabData) {
+                for (const c of (saveData.TabContainers || saveData.tabContainers || [])) {
+                    foundTabData = (c.Tabs || c.tabs || [])
+                        .find(t => (t.Name || t.name) === row.tab_name);
+                    if (foundTabData) break;
+                }
+            }
+
+            if (!foundTabData) continue;
+
+            const refreshed = parseTabData(foundTabData);
+            tab.groups = refreshed.groups;
+            tab.tabColor = refreshed.tabColor;
+
+        } catch (e) {
+            console.error('[Lynkr] live tab refresh failed:', e);
+        }
+    }
+
+    saveToLocalStorage();
+    renderBookmarks();
+}
+    
 function importBackup(data) {
     let count = 0;
     (data.tabs || []).forEach(td => {
