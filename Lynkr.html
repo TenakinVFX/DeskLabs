@@ -1708,10 +1708,12 @@ function closeModal(id) {
 }
 
 function closeAllOverlays() {
-['_ctxMenu', 'accountDropdown', 'authModal', 'addBmModal', 'shareTabModal'].forEach(id => {
+    ['_ctxMenu', 'accountDropdown', 'authModal', 'addBmModal', 
+     'shareTabModal', 'importModal', 'shareCodeModal'].forEach(id => {
         document.getElementById(id)?.remove();
     });
 }
+
 
 function setSyncStatus(msg) {
     document.getElementById('syncStatusText').textContent = msg;
@@ -1739,7 +1741,7 @@ document.addEventListener('keydown', e => {
 });
 function showShareTabDialog(tabName) {
     window._shareTabName = tabName;
-    setTimeout(() => {
+    
         const overlay = mkOverlay('shareTabModal');
         overlay.innerHTML = `
     <div class="modal">
@@ -1774,7 +1776,7 @@ function showShareTabDialog(tabName) {
             document.getElementById('snapshotBtn').disabled = true;
             document.getElementById('liveBtn').disabled = true;
         }
-    }, 50);
+    }
 }
 async function generateShareCode(tabName, isLive) {
     if (!currentUser) return;
