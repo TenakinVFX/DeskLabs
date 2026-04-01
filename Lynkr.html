@@ -1520,17 +1520,20 @@ async function importFromShareRow(row) {
         let tabJson;
 
         if (row.is_live) {
-            // Fetch owner's current cloud data and find the tab
-            const { data, error } = await sb
-                .from('lynkr_bookmarks')
-                .select('data')
-                .eq('user_id', row.owner_user_id)
-                .maybeSingle();
+    const { data, error } = await sb
+        .from('lynkr_bookmarks')
+        .select('data')
+        .eq('user_id', row.owner_user_id)
+        .maybeSingle();
 
-            if (error || !data?.data) {
-                alert('The owner has no cloud data available.');
-                return;
-            }
+    if (!error && data?.data) {
+        // use cloud data as before...
+    } else {
+        // Fall back to the snapshot stored at share time
+        tabJson = row.tab_data;
+    }
+}
+
 
             const saveData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
             let foundTabData = null;
