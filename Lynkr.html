@@ -1677,9 +1677,12 @@ function showCtxMenu(x, y, items) {
             btn.innerHTML = `${item.icon} ${item.label}`;
             btn.onclick = (e) => {
     e.stopPropagation();
-    closeAllOverlays();
-    setTimeout(() => item.action(), 0);  // ← add setTimeout here
+    // Remove ONLY the context menu, not all overlays
+    document.getElementById('_ctxMenu')?.remove();
+    document.removeEventListener('click', closeAllOverlays);
+    item.action();
 };
+
 
             menu.appendChild(btn);
         }
@@ -1815,7 +1818,7 @@ async function generateShareCode(tabName, isLive) {
         shareCodeDisplay.textContent = code;
         shareResult.classList.remove('hidden');
         window._currentShareCode = code;
-try { await navigator.clipboard.writeText(code); } catch(e) {}
+
 
 
     } catch (e) {
