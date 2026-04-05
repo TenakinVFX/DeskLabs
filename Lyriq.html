@@ -38,7 +38,6 @@ flex-direction: column;
 overflow: hidden;
 }
 
-/* Grain overlay */
 body::before {
 content: ‘’;
 position: fixed;
@@ -49,7 +48,6 @@ z-index: 9999;
 opacity: 0.5;
 }
 
-/* ── HEADER ── */
 header {
 display: flex;
 align-items: center;
@@ -84,7 +82,6 @@ font-size: 16px;
 }
 .icon-btn:hover, .icon-btn.active { color: var(–accent); border-color: var(–accent); }
 
-/* ── TABS ── */
 .tabs {
 display: flex;
 padding: 10px 18px 0;
@@ -118,14 +115,12 @@ border-bottom: 1px solid var(–surface);
 margin-bottom: -1px;
 }
 
-/* ── MAIN ── */
 .app-body {
 display: flex;
 flex: 1;
 overflow: hidden;
 }
 
-/* ── SIDEBAR ── */
 .sidebar {
 width: 260px;
 background: var(–surface);
@@ -227,7 +222,6 @@ font-weight: 500;
 .tag-chorus { background: var(–tag2); color: var(–tag2b); }
 .tag-bridge { background: var(–tag3); color: var(–tag3b); }
 
-/* ── EDITOR AREA ── */
 .editor-area {
 flex: 1;
 display: flex;
@@ -368,7 +362,6 @@ overflow: hidden;
 .lyric-textarea:focus { border-color: var(–accent2); }
 .lyric-textarea::placeholder { color: var(–border); font-style: italic; }
 
-/* ── BOTTOM BAR ── */
 .bottom-bar {
 padding: 10px 18px;
 border-top: 1px solid var(–border);
@@ -406,7 +399,6 @@ color: var(–muted);
 }
 .btn-ghost:hover { color: var(–text); border-color: var(–muted); }
 
-/* ── RHYME PANEL ── */
 .rhyme-panel {
 width: 220px;
 background: var(–surface);
@@ -501,7 +493,6 @@ border-color: var(–accent2);
 color: white;
 }
 
-/* ── EMPTY STATE ── */
 .empty-state {
 flex: 1;
 display: flex;
@@ -517,7 +508,6 @@ text-align: center;
 .empty-state h3 { font-family: ‘Playfair Display’, serif; font-size: 18px; color: var(–muted); font-weight: 400; }
 .empty-state p { font-size: 12px; line-height: 1.6; max-width: 220px; }
 
-/* ── MOBILE BOTTOM NAV ── */
 .mobile-nav {
 display: none;
 padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
@@ -548,7 +538,6 @@ font-family: ‘DM Mono’, monospace;
 .mobile-nav-btn svg { width: 22px; height: 22px; }
 .mobile-nav-btn span { font-size: 9px; letter-spacing: 0.5px; }
 
-/* ── MODAL ── */
 .modal-overlay {
 display: none;
 position: fixed;
@@ -594,7 +583,6 @@ margin-bottom: 14px;
 
 .modal-row { display: flex; gap: 8px; justify-content: flex-end; }
 
-/* ── RESPONSIVE ── */
 @media (max-width: 768px) {
 .sidebar { display: none; width: 100%; }
 .sidebar.mobile-visible { display: flex; position: fixed; inset: 0; top: 56px; z-index: 50; width: 100%; border-right: none; }
@@ -611,7 +599,6 @@ margin-bottom: 14px;
 .sidebar { width: 200px; }
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
@@ -619,8 +606,6 @@ margin-bottom: 14px;
 
 </head>
 <body>
-
-<!-- HEADER -->
 
 <header>
   <div class="logo">Lyriq<span>.</span></div>
@@ -634,8 +619,6 @@ margin-bottom: 14px;
   </div>
 </header>
 
-<!-- TABS -->
-
 <div class="tabs">
   <div class="tab active">All Songs</div>
   <div class="tab">Drafts</div>
@@ -643,65 +626,41 @@ margin-bottom: 14px;
   <div class="tab">Archived</div>
 </div>
 
-<!-- BODY -->
-
 <div class="app-body">
-
-  <!-- SIDEBAR -->
 
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <input class="search-box" type="text" placeholder="Search songs..." id="searchInput">
       <button class="new-song-btn" id="newSongBtn" title="New song">+</button>
     </div>
-    <div class="song-list" id="songList">
-      <!-- Songs rendered by JS -->
-    </div>
+    <div class="song-list" id="songList"></div>
   </div>
 
-  <!-- EDITOR -->
-
   <div class="editor-area" id="editorArea">
-    <!-- Empty state -->
     <div class="empty-state" id="emptyState">
       <div class="empty-state-icon">♪</div>
       <h3>No song selected</h3>
       <p>Pick a song from the list, or tap + to start writing something new.</p>
     </div>
-
-```
-<!-- Editor (hidden until song selected) -->
-<div id="editorContent" style="display:none;flex:1;display:none;flex-direction:column;overflow:hidden;">
-  <div class="editor-top">
-    <input class="song-title-input" id="songTitleInput" placeholder="Untitled Song" type="text">
+    <div id="editorContent" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+      <div class="editor-top">
+        <input class="song-title-input" id="songTitleInput" placeholder="Untitled Song" type="text">
+      </div>
+      <div class="editor-meta">
+        <div class="meta-chip"><span id="keyDisplay">Am</span> Key</div>
+        <div class="meta-chip"><span id="tempoDisplay">92</span> BPM</div>
+        <div class="meta-chip"><span id="genreDisplay">Indie</span></div>
+        <div class="meta-chip" id="addMetaBtn">+ add</div>
+      </div>
+      <div class="section-chips" id="sectionChips"></div>
+      <div class="lyric-editor" id="lyricEditor"></div>
+      <div class="bottom-bar">
+        <div class="wordcount" id="wordcount">0 words · 0 lines</div>
+        <button class="btn btn-ghost" onclick="exportSong()">Export</button>
+        <button class="btn btn-primary" onclick="saveSong()">Save</button>
+      </div>
+    </div>
   </div>
-  <div class="editor-meta">
-    <div class="meta-chip"><span id="keyDisplay">Am</span> Key</div>
-    <div class="meta-chip"><span id="tempoDisplay">92</span> BPM</div>
-    <div class="meta-chip"><span id="genreDisplay">Indie</span></div>
-    <div class="meta-chip" id="addMetaBtn">+ add</div>
-  </div>
-  <div class="section-chips" id="sectionChips">
-    <button class="section-chip active-v" data-section="verse1" onclick="scrollToSection('verse1', this)">Verse 1</button>
-    <button class="section-chip active-c" data-section="chorus" onclick="scrollToSection('chorus', this)">Chorus</button>
-    <button class="section-chip active-v" data-section="verse2" onclick="scrollToSection('verse2', this)">Verse 2</button>
-    <button class="section-chip active-b" data-section="bridge" onclick="scrollToSection('bridge', this)">Bridge</button>
-    <button class="section-chip" onclick="addSection()">+ Section</button>
-  </div>
-  <div class="lyric-editor" id="lyricEditor">
-    <!-- sections rendered by JS -->
-  </div>
-  <div class="bottom-bar">
-    <div class="wordcount" id="wordcount">0 words · 0 lines</div>
-    <button class="btn btn-ghost" onclick="exportSong()">Export</button>
-    <button class="btn btn-primary" onclick="saveSong()">Save</button>
-  </div>
-</div>
-```
-
-  </div>
-
-  <!-- RHYME PANEL -->
 
   <div class="rhyme-panel" id="rhymePanel">
     <div class="panel-header">
@@ -719,9 +678,7 @@ margin-bottom: 14px;
     </div>
   </div>
 
-</div><!-- app-body -->
-
-<!-- MOBILE NAV -->
+</div>
 
 <nav class="mobile-nav">
   <div class="mobile-nav-inner">
@@ -740,8 +697,6 @@ margin-bottom: 14px;
   </div>
 </nav>
 
-<!-- NEW SONG MODAL -->
-
 <div class="modal-overlay" id="newSongModal">
   <div class="modal">
     <div class="modal-title">New Song</div>
@@ -754,15 +709,11 @@ margin-bottom: 14px;
 </div>
 
 <script>
-// ── DATA ──────────────────────────────────────────────────────────────────
 let songs = [
   {
     id: 1,
     title: "Shallow Waters",
-    key: "Em",
-    bpm: 78,
-    genre: "Folk",
-    date: "Apr 3",
+    key: "Em", bpm: 78, genre: "Folk", date: "Apr 3",
     sections: [
       { id: "verse1", label: "Verse 1", type: "verse", content: "Standing at the edge of something older\nThe sky unravels at the seam\nI've been carrying this stone on my shoulder\nWaiting for a sign to let it be" },
       { id: "chorus", label: "Chorus", type: "chorus", content: "We're all just wading through shallow waters\nSearching for a depth we've never known\nLike desperate sons and restless daughters\nBuilding broken bridges back to home" },
@@ -773,10 +724,7 @@ let songs = [
   {
     id: 2,
     title: "Neon Midnight",
-    key: "Dm",
-    bpm: 112,
-    genre: "Synthpop",
-    date: "Mar 28",
+    key: "Dm", bpm: 112, genre: "Synthpop", date: "Mar 28",
     sections: [
       { id: "verse1", label: "Verse 1", type: "verse", content: "Electric signs bleed into the rain\nYou left your jacket I can't explain\nThe city hums a frequency of pain" },
       { id: "chorus", label: "Chorus", type: "chorus", content: "Neon midnight, neon midnight\nWe were burning, burning bright\nNeon midnight, neon midnight\nLost in colour, lost in light" },
@@ -786,10 +734,7 @@ let songs = [
   {
     id: 3,
     title: "Sunday Drift",
-    key: "G",
-    bpm: 65,
-    genre: "R&B",
-    date: "Mar 21",
+    key: "G", bpm: 65, genre: "R&B", date: "Mar 21",
     sections: [
       { id: "verse1", label: "Verse 1", type: "verse", content: "Coffee getting cold on the windowsill\nYour name still warm inside my mouth\nThe kind of quiet nothing else can fill\nLazy Sunday drifting south" },
       { id: "chorus", label: "Chorus", type: "chorus", content: "Sunday drift, Sunday drift\nTime moves slow when you're in my arms\nSunday drift, Sunday drift\nWrap me in your Sunday charms" }
@@ -798,10 +743,7 @@ let songs = [
   {
     id: 4,
     title: "Cartography",
-    key: "C",
-    bpm: 88,
-    genre: "Indie",
-    date: "Mar 15",
+    key: "C", bpm: 88, genre: "Indie", date: "Mar 15",
     sections: [
       { id: "verse1", label: "Verse 1", type: "verse", content: "I've been drawing maps of you in my sleep\nEvery scar a coastline, every silence deep\nMeridians of memory that I can't keep" }
     ]
@@ -809,62 +751,43 @@ let songs = [
 ];
 
 let activeSongId = null;
-let sectionOrder = [];
 let mobileView = 'songs';
+let sectionCounts = {};
 
-// ── RHYME DATA ────────────────────────────────────────────────────────────
 const rhymeDB = {
-  "love": { perfect: ["above", "dove", "shove", "glove"], near: ["of", "have", "alive", "thrive"], slant: ["enough", "tough", "rough", "bluff"] },
-  "night": { perfect: ["light", "bright", "right", "sight", "might", "fight", "tight", "white", "write", "kite"], near: ["lie", "sky", "alive", "guide"], slant: ["knit", "wait", "late", "fate"] },
-  "rain": { perfect: ["pain", "gain", "lane", "plain", "brain", "train", "chain", "stain", "vain", "main"], near: ["ran", "ran", "name", "flame"], slant: ["end", "wind", "friend", "blend"] },
-  "home": { perfect: ["foam", "roam", "dome", "rome", "chrome", "poem", "tome"], near: ["alone", "bone", "stone", "phone"], slant: ["hold", "cold", "soul", "whole"] },
-  "away": { perfect: ["day", "say", "stay", "play", "way", "may", "gray", "pray", "sway", "bay"], near: ["fade", "made", "shade", "trade"], slant: ["end", "bend", "send", "friend"] },
-  "heart": { perfect: ["start", "art", "part", "chart", "smart", "dart", "apart"], near: ["hard", "yard", "guard", "scars"], slant: ["path", "half", "last", "past"] },
-  "sky": { perfect: ["fly", "high", "lie", "die", "try", "cry", "why", "my", "by"], near: ["side", "ride", "guide", "wide"], slant: ["light", "night", "bright", "right"] },
-  "time": { perfect: ["rhyme", "climb", "dime", "lime", "mime", "prime"], near: ["mind", "find", "blind", "kind"], slant: ["line", "mine", "fine", "divine"] },
-  "fire": { perfect: ["higher", "desire", "entire", "inspire", "admire"], near: ["bright", "night", "light", "fight"], slant: ["wild", "child", "mild", "riled"] },
-  "cold": { perfect: ["bold", "hold", "told", "fold", "gold", "old", "sold", "rolled"], near: ["soul", "whole", "goal", "role"], slant: ["fall", "call", "wall", "hall"] },
+  "love": { perfect: ["above","dove","shove","glove"], near: ["of","have","alive","thrive"], slant: ["enough","tough","rough","bluff"] },
+  "night": { perfect: ["light","bright","right","sight","might","fight","tight","white","write","kite"], near: ["lie","sky","alive","guide"], slant: ["knit","wait","late","fate"] },
+  "rain": { perfect: ["pain","gain","lane","plain","brain","train","chain","stain","vain","main"], near: ["ran","name","flame","same"], slant: ["end","wind","friend","blend"] },
+  "home": { perfect: ["foam","roam","dome","rome","chrome","poem","tome"], near: ["alone","bone","stone","phone"], slant: ["hold","cold","soul","whole"] },
+  "away": { perfect: ["day","say","stay","play","way","may","gray","pray","sway","bay"], near: ["fade","made","shade","trade"], slant: ["end","bend","send","friend"] },
+  "heart": { perfect: ["start","art","part","chart","smart","dart","apart"], near: ["hard","yard","guard","scars"], slant: ["path","half","last","past"] },
+  "sky": { perfect: ["fly","high","lie","die","try","cry","why","my","by"], near: ["side","ride","guide","wide"], slant: ["light","night","bright","right"] },
+  "time": { perfect: ["rhyme","climb","dime","lime","mime","prime"], near: ["mind","find","blind","kind"], slant: ["line","mine","fine","divine"] },
+  "fire": { perfect: ["higher","desire","entire","inspire","admire"], near: ["bright","night","light","fight"], slant: ["wild","child","mild","riled"] },
+  "cold": { perfect: ["bold","hold","told","fold","gold","old","sold","rolled"], near: ["soul","whole","goal","role"], slant: ["fall","call","wall","hall"] }
 };
 
 function findRhymes() {
   const word = document.getElementById('rhymeInput').value.trim().toLowerCase();
   const res = document.getElementById('rhymeResults');
   if (!word) return;
-
   let data = rhymeDB[word];
   if (!data) {
-    // Generate pseudo-rhymes based on ending
     const ending = word.slice(-2);
+    const map = { "ay":["say","way","day","play","stay","pray"],"ht":["light","night","bright","right","fight"],"ve":["love","dove","shove","above"],"ng":["song","long","strong","along"],"ee":["free","tree","see","be","me","sea"] };
     data = {
-      perfect: generateRhymes(word, ending),
-      near: generateNearRhymes(word),
-      slant: ["echo", "shadow", "hollow", "sorrow"]
+      perfect: map[ending] || ["dream","stream","gleam","seem","team","beam"],
+      near: ["echo","hollow","follow","meadow","shadow","narrow","borrow"],
+      slant: ["echo","shadow","hollow","sorrow"]
     };
   }
-
-  res.innerHTML = `
+  res.innerHTML = ['perfect','near','slant'].map(type => `
     <div class="rhyme-group">
-      <div class="rhyme-group-label">Perfect</div>
-      <div class="rhyme-words">${data.perfect.map(w => `<div class="rhyme-word" onclick="insertWord('${w}')">${w}</div>`).join('')}</div>
-    </div>
-    <div class="rhyme-group">
-      <div class="rhyme-group-label">Near</div>
-      <div class="rhyme-words">${data.near.map(w => `<div class="rhyme-word" onclick="insertWord('${w}')">${w}</div>`).join('')}</div>
-    </div>
-    <div class="rhyme-group">
-      <div class="rhyme-group-label">Slant</div>
-      <div class="rhyme-words">${data.slant.map(w => `<div class="rhyme-word" onclick="insertWord('${w}')">${w}</div>`).join('')}</div>
-    </div>
-  `;
+      <div class="rhyme-group-label">${type}</div>
+      <div class="rhyme-words">${data[type].map(w => `<div class="rhyme-word" onclick="insertWord('${w}')">${w}</div>`).join('')}</div>
+    </div>`).join('');
 }
 
-function generateRhymes(word, ending) {
-  const map = { "ay": ["say","way","day","play","stay","pray"], "ight": ["light","night","bright","right","fight"], "ove": ["love","dove","shove","above"], "ong": ["song","long","strong","along"], "ree": ["free","tree","see","be","me","sea"] };
-  return map[ending] || ["dream", "stream", "gleam", "seem", "team", "beam"];
-}
-function generateNearRhymes(word) {
-  return ["echo", "hollow", "follow", "meadow", "shadow", "narrow", "borrow"];
-}
 function insertWord(w) {
   const focused = document.activeElement;
   if (focused && focused.classList.contains('lyric-textarea')) {
@@ -878,27 +801,21 @@ function insertWord(w) {
 
 document.getElementById('rhymeInput').addEventListener('keydown', e => { if (e.key === 'Enter') findRhymes(); });
 
-// ── RENDER SONGS ──────────────────────────────────────────────────────────
 function renderSongList(filter = '') {
   const list = document.getElementById('songList');
   const filtered = songs.filter(s => s.title.toLowerCase().includes(filter.toLowerCase()));
   list.innerHTML = filtered.map(s => {
     const types = [...new Set(s.sections.map(sec => sec.type))];
-    const tags = types.slice(0, 2).map(t => `<span class="tag tag-${t}">${t}</span>`).join('');
-    return `
-      <div class="song-item ${activeSongId === s.id ? 'active' : ''}" onclick="openSong(${s.id})">
-        <div class="song-item-title">${s.title}</div>
-        <div class="song-item-meta">
-          <span class="song-date">${s.date}</span>
-          ${tags}
-        </div>
-      </div>`;
+    const tags = types.slice(0,2).map(t => `<span class="tag tag-${t}">${t}</span>`).join('');
+    return `<div class="song-item ${activeSongId === s.id ? 'active' : ''}" onclick="openSong(${s.id})">
+      <div class="song-item-title">${s.title}</div>
+      <div class="song-item-meta"><span class="song-date">${s.date}</span>${tags}</div>
+    </div>`;
   }).join('');
 }
 
 document.getElementById('searchInput').addEventListener('input', e => renderSongList(e.target.value));
 
-// ── OPEN SONG ─────────────────────────────────────────────────────────────
 function openSong(id) {
   activeSongId = id;
   const song = songs.find(s => s.id === id);
@@ -908,46 +825,35 @@ function openSong(id) {
   ec.style.flexDirection = 'column';
   ec.style.overflow = 'hidden';
   ec.style.flex = '1';
-
   document.getElementById('songTitleInput').value = song.title;
   document.getElementById('keyDisplay').textContent = song.key;
   document.getElementById('tempoDisplay').textContent = song.bpm;
   document.getElementById('genreDisplay').textContent = song.genre;
-
   renderSections(song);
   renderSongList();
   updateWordCount();
-
-  // Mobile: switch to editor
   if (window.innerWidth <= 768) mobileNav('editor');
 }
 
 function renderSections(song) {
   const editor = document.getElementById('lyricEditor');
-  editor.innerHTML = song.sections.map(sec => {
-    const typeClass = sec.type === 'chorus' ? 'active-c' : sec.type === 'bridge' ? 'active-b' : 'active-v';
-    return `
-      <div class="lyric-section" id="sec-${sec.id}">
-        <div class="section-label">${sec.label}</div>
-        <textarea class="lyric-textarea" data-section="${sec.id}" placeholder="Write your ${sec.label.toLowerCase()} here..."
-          oninput="autoResize(this);updateWordCount()">${sec.content}</textarea>
+  editor.innerHTML = song.sections.map(sec => `
+    <div class="lyric-section" id="sec-${sec.id}">
+      <div class="section-label">${sec.label}</div>
+      <textarea class="lyric-textarea" data-section="${sec.id}" placeholder="Write your ${sec.label.toLowerCase()} here..."
+        oninput="autoResize(this);updateWordCount()">${sec.content}</textarea>
 
 ```
-  </div>`;
+</div>`).join('');
 ```
 
-}).join(’’);
-
-// Render section chips
 const chips = document.getElementById(‘sectionChips’);
 chips.innerHTML = song.sections.map(sec => {
 const cls = sec.type === ‘chorus’ ? ‘active-c’ : sec.type === ‘bridge’ ? ‘active-b’ : ‘active-v’;
-return `<button class="section-chip ${cls}" onclick="scrollToSection('${sec.id}', this)">${sec.label}</button>`;
+return `<button class="section-chip ${cls}" onclick="scrollToSection('${sec.id}')">${sec.label}</button>`;
 }).join(’’) + `<button class="section-chip" onclick="addSection()">+ Section</button>`;
 
-setTimeout(() => {
-document.querySelectorAll(’.lyric-textarea’).forEach(ta => autoResize(ta));
-}, 50);
+setTimeout(() => document.querySelectorAll(’.lyric-textarea’).forEach(ta => autoResize(ta)), 50);
 }
 
 function autoResize(el) {
@@ -955,27 +861,22 @@ el.style.height = ‘auto’;
 el.style.height = Math.max(90, el.scrollHeight) + ‘px’;
 }
 
-function scrollToSection(id, btn) {
+function scrollToSection(id) {
 const el = document.getElementById(‘sec-’ + id);
 if (el) el.scrollIntoView({ behavior: ‘smooth’, block: ‘start’ });
 }
 
 function updateWordCount() {
-const song = songs.find(s => s.id === activeSongId);
-if (!song) return;
-const texts = document.querySelectorAll(’.lyric-textarea’);
+if (!activeSongId) return;
 let words = 0, lines = 0;
-texts.forEach(ta => {
-const v = ta.value;
-words += v.split(/\s+/).filter(w => w.length > 0).length;
-lines += v.split(’\n’).filter(l => l.trim()).length;
+document.querySelectorAll(’.lyric-textarea’).forEach(ta => {
+words += ta.value.split(/\s+/).filter(w => w.length > 0).length;
+lines += ta.value.split(’\n’).filter(l => l.trim()).length;
 });
 document.getElementById(‘wordcount’).textContent = `${words} words · ${lines} lines`;
 }
 
-// ── ADD SECTION ───────────────────────────────────────────────────────────
-const sectionTypes = [‘Verse’, ‘Chorus’, ‘Bridge’, ‘Pre-Chorus’, ‘Outro’, ‘Intro’, ‘Hook’];
-let sectionCounts = {};
+const sectionTypes = [‘Verse’,‘Chorus’,‘Bridge’,‘Pre-Chorus’,‘Outro’,‘Intro’,‘Hook’];
 
 function addSection() {
 if (!activeSongId) return;
@@ -983,14 +884,13 @@ const song = songs.find(s => s.id === activeSongId);
 const label = sectionTypes[Math.floor(Math.random() * 3)];
 sectionCounts[label] = (sectionCounts[label] || 0) + 1;
 const fullLabel = `${label} ${sectionCounts[label] + 1}`;
-const type = label.toLowerCase().replace(’-’, ‘’);
+const type = label.toLowerCase().replace(’-’,’’);
 const id = label.toLowerCase() + Date.now();
 song.sections.push({ id, label: fullLabel, type: type.includes(‘chorus’) ? ‘chorus’ : type.includes(‘bridge’) ? ‘bridge’ : ‘verse’, content: ‘’ });
 renderSections(song);
 setTimeout(() => scrollToSection(id), 100);
 }
 
-// ── SAVE ──────────────────────────────────────────────────────────────────
 function saveSong() {
 if (!activeSongId) return;
 const song = songs.find(s => s.id === activeSongId);
@@ -1000,8 +900,6 @@ const sec = song.sections.find(s => s.id === ta.dataset.section);
 if (sec) sec.content = ta.value;
 });
 renderSongList();
-
-// Flash feedback
 const btn = event.target;
 const orig = btn.textContent;
 btn.textContent = ‘✓ Saved’;
@@ -1013,17 +911,13 @@ function exportSong() {
 if (!activeSongId) return;
 const song = songs.find(s => s.id === activeSongId);
 let out = `${song.title}\n${'─'.repeat(song.title.length)}\nKey: ${song.key} · ${song.bpm} BPM · ${song.genre}\n\n`;
-song.sections.forEach(sec => {
-out += `[ ${sec.label.toUpperCase()} ]\n${sec.content}\n\n`;
-});
-const blob = new Blob([out], { type: ‘text/plain’ });
+song.sections.forEach(sec => { out += `[ ${sec.label.toUpperCase()} ]\n${sec.content}\n\n`; });
 const a = document.createElement(‘a’);
-a.href = URL.createObjectURL(blob);
-a.download = `${song.title.replace(/\s+/g, '_')}.txt`;
+a.href = URL.createObjectURL(new Blob([out], { type: ‘text/plain’ }));
+a.download = `${song.title.replace(/\s+/g,'_')}.txt`;
 a.click();
 }
 
-// ── NEW SONG MODAL ────────────────────────────────────────────────────────
 document.getElementById(‘newSongBtn’).addEventListener(‘click’, () => {
 document.getElementById(‘newSongModal’).classList.add(‘open’);
 setTimeout(() => document.getElementById(‘newSongTitle’).focus(), 100);
@@ -1039,12 +933,7 @@ document.getElementById(‘newSongTitle’).addEventListener(‘keydown’, e =>
 function createSong() {
 const title = document.getElementById(‘newSongTitle’).value.trim() || ‘Untitled’;
 const newSong = {
-id: Date.now(),
-title,
-key: ‘C’,
-bpm: 90,
-genre: ‘Pop’,
-date: ‘Today’,
+id: Date.now(), title, key: ‘C’, bpm: 90, genre: ‘Pop’, date: ‘Today’,
 sections: [
 { id: ‘verse1’, label: ‘Verse 1’, type: ‘verse’, content: ‘’ },
 { id: ‘chorus’, label: ‘Chorus’, type: ‘chorus’, content: ‘’ }
@@ -1058,17 +947,13 @@ openSong(newSong.id);
 
 document.getElementById(‘newSongModal’).addEventListener(‘click’, e => { if (e.target === e.currentTarget) closeModal(); });
 
-// ── MOBILE NAV ────────────────────────────────────────────────────────────
 function mobileNav(view) {
 if (window.innerWidth > 768) return;
 mobileView = view;
-
 document.getElementById(‘sidebar’).classList.remove(‘mobile-visible’);
 document.getElementById(‘editorArea’).classList.remove(‘mobile-visible’);
 document.getElementById(‘rhymePanel’).classList.remove(‘mobile-visible’);
-
-[‘navSongs’, ‘navEditor’, ‘navRhyme’].forEach(id => document.getElementById(id).classList.remove(‘active’));
-
+[‘navSongs’,‘navEditor’,‘navRhyme’].forEach(id => document.getElementById(id).classList.remove(‘active’));
 if (view === ‘songs’) {
 document.getElementById(‘sidebar’).classList.add(‘mobile-visible’);
 document.getElementById(‘navSongs’).classList.add(‘active’);
@@ -1081,14 +966,10 @@ document.getElementById(‘navRhyme’).classList.add(‘active’);
 }
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────
 renderSongList();
 if (window.innerWidth > 768) openSong(songs[0].id);
-else {
-document.getElementById(‘sidebar’).classList.add(‘mobile-visible’);
-}
+else document.getElementById(‘sidebar’).classList.add(‘mobile-visible’);
 
-// Tab clicks
 document.querySelectorAll(’.tab’).forEach(tab => {
 tab.addEventListener(‘click’, function() {
 document.querySelectorAll(’.tab’).forEach(t => t.classList.remove(‘active’));
@@ -1096,7 +977,6 @@ this.classList.add(‘active’);
 });
 });
 
-// Title auto-save
 document.getElementById(‘songTitleInput’).addEventListener(‘input’, function() {
 if (activeSongId) {
 songs.find(s => s.id === activeSongId).title = this.value;
