@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 
 <html lang="en">
@@ -774,7 +775,13 @@ function findRhymes() {
   let data = rhymeDB[word];
   if (!data) {
     const ending = word.slice(-2);
-    const map = { "ay":["say","way","day","play","stay","pray"],"ht":["light","night","bright","right","fight"],"ve":["love","dove","shove","above"],"ng":["song","long","strong","along"],"ee":["free","tree","see","be","me","sea"] };
+    const map = {
+      "ay": ["say","way","day","play","stay","pray"],
+      "ht": ["light","night","bright","right","fight"],
+      "ve": ["love","dove","shove","above"],
+      "ng": ["song","long","strong","along"],
+      "ee": ["free","tree","see","be","me","sea"]
+    };
     data = {
       perfect: map[ending] || ["dream","stream","gleam","seem","team","beam"],
       near: ["echo","hollow","follow","meadow","shadow","narrow","borrow"],
@@ -886,7 +893,12 @@ sectionCounts[label] = (sectionCounts[label] || 0) + 1;
 const fullLabel = `${label} ${sectionCounts[label] + 1}`;
 const type = label.toLowerCase().replace(’-’,’’);
 const id = label.toLowerCase() + Date.now();
-song.sections.push({ id, label: fullLabel, type: type.includes(‘chorus’) ? ‘chorus’ : type.includes(‘bridge’) ? ‘bridge’ : ‘verse’, content: ‘’ });
+song.sections.push({
+id,
+label: fullLabel,
+type: type.includes(‘chorus’) ? ‘chorus’ : type.includes(‘bridge’) ? ‘bridge’ : ‘verse’,
+content: ‘’
+});
 renderSections(song);
 setTimeout(() => scrollToSection(id), 100);
 }
